@@ -1,0 +1,18 @@
+[
+    {
+        "username": "admin",
+        "password": "scrypt:32768:8:1$s2Ul8J7de4ge49sO$c276e45cbdf3ec7b89ac949e7a1a03e05aaa74983b4b1f4d68a6818bfc4e4453090909a596d8c2a6dbd71188e7ea8a6ed88324efd55551656ecfa810dace6aaf",
+        "role": "admin",
+        "profile_img": "55555",
+        "activated": true,
+        "salary": 152.0
+    },
+    {
+        "username": "user",
+        "password": "scrypt:32768:8:1$l8hzVNGBdi5AdoEd$ad31f86def371733983492d3bb19ef2b210b8ed40a60d2c53e47b767156496819eed10bdd645bde25f54badbb190c36a9237b808e6c65aa8bc7e22ff5228d4ee",
+        "role": "seller",
+        "profile_img": "",
+        "salary": 1200.0,
+        "activated": true
+    }
+]

@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block title %}Items{% endblock %}
+{% block content %}
+<h2>Items</h2>
+<a href="{{ url_for('add_item') }}" class="btn btn-primary mb-3">Add New Item</a>
+
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Barcode</th>
+      <th>Purchase Price</th>
+      <th>Selling Price</th>
+      <th>Min Selling Price</th>
+      <th>Price</th>
+      <th>Quantity</th>
+      <th>Description</th>
+      <th>Photo</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr>
+      <td>{{ item.name }}</td>
+      <td>{{ item.barcode }}</td>
+      <td>${{ "%.2f"|format(item.purchase_price) }}</td>
+      <td>${{ "%.2f"|format(item.selling_price) }}</td>
+      <td>${{ "%.2f"|format(item.min_selling_price) }}</td>
+      <td>${{ "%.2f"|format(item.price) }}</td>
+      <td>{{ item.quantity }}</td>
+      <td>{{ item.description }}</td>
+      <td>
+        {% if item.photo_link %}
+          <img src="{{ item.photo_link }}" width="50" alt="Product photo">
+        {% else %}
+          No Image
+        {% endif %}
+      </td>
+      <td>
+        <a href="{{ url_for('edit_item', barcode=item.barcode) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form method="POST" action="{{ url_for('delete_item', barcode=item.barcode) }}" style="display:inline" onsubmit="return confirm('Delete this item?');">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="10">No items found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

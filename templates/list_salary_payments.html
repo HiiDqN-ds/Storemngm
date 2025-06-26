@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Gehaltzahlungen Liste{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2>Liste der Gehaltszahlungen</h2>
+  {% if payments %}
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Mitarbeiter</th>
+          <th>Betrag (ل.س)</th>
+          <th>Zahlungsquelle</th>
+          <th>Datum</th>
+          <th>Notizen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for payment in payments %}
+        <tr>
+        <td>{{ payment.employee }}</td>
+        <td>{{ payment.amount }} €</td>
+        <td>{{ payment.source }}</td>  <!-- Use source, not payment_source -->
+        <td>{{ payment.date }}</td>
+        <td>{{ payment.note }}</td>    <!-- Use note, not notes -->
+        </tr>
+        {% else %}
+        <tr><td colspan="5">Keine Zahlungen gefunden.</td></tr>
+        {% endfor %}
+    </tbody>
+    </table>
+  {% else %}
+    <p>Keine Gehaltszahlungen gefunden.</p>
+  {% endif %}
+</div>
+{% endblock %}

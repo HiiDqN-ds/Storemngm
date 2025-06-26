@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Seller Dashboard - Verwaltungsplattform{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h1 class="mb-3">Hallo, {{ seller.username }}!</h1>
+  <div class="user-info mb-4">Ihre Rolle: <strong>{{ seller.role }}</strong></div>
+
+  <div class="mb-5">
+    <h2>Aktueller Kontostand (Wallet)</h2>
+    <p class="display-4 text-success fw-bold">€{{ total_income | round(2) }}</p>
+  </div>
+
+  <div class="d-flex gap-4 flex-wrap">
+    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
+      <h3>Tägliche Einnahmen</h3>
+      <p class="display-5 text-primary fw-semibold mb-0">€{{ daily_income | round(2) }}</p>
+    </div>
+    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
+      <h3>Gesamtverkäufe</h3>
+      <p class="display-5 text-secondary fw-semibold mb-0">{{ total_sales }}</p>
+    </div>
+  </div>
+
+  <div class="d-flex gap-4 flex-wrap mt-5">
+    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
+      <h3>Monatliche Einnahmen</h3>
+      {% for month, income in monthly_income.items() %}
+        <p>{{ month }}: €{{ income | round(2) }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
+      <h3>Monatliche Ausgaben</h3>
+      {% for month, expense in monthly_expense.items() %}
+        <p>{{ month }}: €{{ expense | round(2) }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
+      <h3>Monatlicher Gewinn (Netto)</h3>
+      {% for month, profit in monthly_profit.items() %}
+        <p>{{ month }}: €{{ profit | round(2) }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <section class="mt-5">
+    <h2>Top verkaufte Artikel</h2>
+    <ul>
+      {% for item in top_items %}
+        <li>{{ item.name }}: {{ item.quantity }}</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="mt-5">
+    <h2>Weitere Funktionen</h2>
+    <p>Nutzen Sie das Navigationsmenü oben, um zu den Verkaufs-, Einkaufs- oder Lagerbestandsseiten zu gelangen.</p>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,62 @@
+[
+  {
+    "order_number": "629910481592",
+    "product_name": "galaxy A26",
+    "ref_number": "dfgfdg",
+    "description": "dfgfd",
+    "price": 777.0,
+    "quantity": 1,
+    "total_price": 777.0,
+    "date": "2025-06-25",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_629910481592"
+  },
+  {
+    "order_number": "982674814445",
+    "product_name": "Iphone14 Pro Max",
+    "ref_number": "xcvxcv",
+    "description": "",
+    "price": 7.0,
+    "quantity": 1,
+    "total_price": 7.0,
+    "date": "2025-06-25",
+    "user": "hamza",
+    "barcode": "barcodes/code_barres_982674814445"
+  },
+  {
+    "order_number": "823067802690",
+    "product_name": "galaxy A26",
+    "ref_number": "sdadsadasdasd",
+    "description": "sdfsdfsdf",
+    "price": 144.0,
+    "quantity": 1,
+    "total_price": 144.0,
+    "date": "2025-06-26",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_823067802690"
+  },
+  {
+    "order_number": "584081692210",
+    "product_name": "galaxy A26",
+    "ref_number": "sdadsadasdasd",
+    "description": "gffgfgf",
+    "price": 1522.0,
+    "quantity": 1,
+    "total_price": 1522.0,
+    "date": "2025-06-26",
+    "user": "user",
+    "barcode": "barcodes/code_barres_584081692210"
+  },
+  {
+    "order_number": "116207022657",
+    "product_name": "dvdv",
+    "ref_number": "erterte",
+    "description": "ertret",
+    "price": 55.0,
+    "quantity": 1,
+    "total_price": 55.0,
+    "date": "2025-06-26",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_116207022657"
+  }
+]

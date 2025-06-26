@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}Bestellungen{% endblock %}
+
+{% block content %}
+<div class="table-responsive">
+  <h2>Alle Bestellungen</h2>
+  <form method="get" class="mb-3 d-flex gap-2 align-items-end">
+      <div>
+        <label for="user">Benutzer:</label>
+        <select name="user" id="user" class="form-select">
+          <option value="">-- Alle --</option>
+          {% for u in users %}
+            <option value="{{ u }}" {% if request.args.get('user') == u %}selected{% endif %}>{{ u }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div>
+        <label for="date">Datum:</label>
+        <input type="date" name="date" id="date" value="{{ request.args.get('date', '') }}" class="form-control">
+      </div>
+      <button type="submit" class="btn btn-primary">Filtern</button>
+      <a href="{{ url_for('list_orders') }}" class="btn btn-secondary">Zurücksetzen</a>
+    </form>
+
+<div style="overflow-x: auto;">
+      <table class="table table-bordered w-100">
+        <thead>
+          <tr>
+            <th>Produktname</th>
+            <th>Referenznummer</th>
+            <th>Beschreibung</th>
+            <th>Preis (€)</th>
+            <th>Menge</th>
+            <th>Gesamtpreis (€)</th>
+            <th>Datum</th>
+            <th>Benutzer</th>
+            <th>Barre Code</th>
+            <th>Aktionen</th>
+
+          </tr>
+        </thead>
+        
+        <tbody>
+  {% if orders %}
+    {% for order in orders %}
+    <tr>
+      <td>{{ order.product_name }}</td>
+      <td>{{ order.ref_number }}</td>
+      <td>{{ order.description }}</td>
+      <td>{{ order.price }}</td>
+      <td>{{ order.quantity }}</td>
+      <td>{{ order.total_price }}</td>
+      <td>{{ order.date }}</td>
+      <td>{{ order.user }}</td>
+      <td>
+        {% if order.barcode %}
+          <img src="{{ url_for('static', filename=order.barcode + '.png') }}" alt="Barcode" style="max-width: 120px;">
+        {% else %}
+          Kein Barcode
+        {% endif %}
+      </td>
+      <td class="text-nowrap">
+        <button class="btn btn-outline-primary btn-sm me-1" title="Quittung drucken" onclick="printReceipt({{ loop.index0 }})">
+          <i class="bi bi-receipt"></i>
+        </button>
+        <button class="btn btn-outline-primary btn-sm me-1" title="Code drucken" onclick="printQRCode({{ loop.index0 }})">
+          <i class="bi bi-upc-scan"></i>
+        </button>
+        <a href="{{ url_for('edit_order', index=loop.index0) }}" class="btn btn-sm btn-warning me-1" title="Bearbeiten">
+          <i class="bi bi-pencil-square"></i>
+        </a>
+        <form action="{{ url_for('delete_order', index=loop.index0) }}" method="post" style="display:inline;" onsubmit="return confirm('Bist du sicher?');">
+          <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  {% else %}
+    <tr>
+      <td colspan="10" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
+    </tr>
+  {% endif %}
+</tbody>
+
+      </table>
+    </div>
+</div>
+
+
+<script>
+const orders = {{ orders | tojson | safe }};
+const username = "{{ session['username']|e }}";
+
+function printReceipt(index) {
+  const order = orders[index];
+  const totalPrice = (order.price * order.quantity).toFixed(2);
+
+  const receiptHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Bestellquittung</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        h3, h4 { margin-top: 0; }
+        table { width: 100%; font-size: 0.95em; border-collapse: collapse; }
+        td { padding: 4px 8px; vertical-align: top; }
+        hr { margin: 20px 0; }
+        .header { display: flex; align-items: center; margin-bottom: 20px; }
+        .header img { height: 60px; margin-right: 15px; }
+        .footer { font-size: 0.8em; text-align: right; }
+      </style>
+    </head>
+    <body onload="window.print()">
+      <div class="header">
+        <img src="${location.origin}/static/images/logo.png" alt="Logo">
+        <div>
+          <h3>Meine Firma</h3>
+          <p>Musterstraße 1, 12345 Musterstadt</p>
+          <p>Tel: 01234 567890 | info@meinefirma.de</p>
+        </div>
+      </div>
+
+      <hr>
+
+      <h4>Bestellquittung</h4>
+      <table>
+        <tr><td><strong>Datum:</strong></td><td>${order.date}</td></tr>
+        <tr><td><strong>Produkt:</strong></td><td>${order.product_name}</td></tr>
+        <tr><td><strong>Referenz:</strong></td><td>${order.ref_number}</td></tr>
+        <tr><td><strong>Beschreibung:</strong></td><td>${order.description || ''}</td></tr>
+        <tr><td><strong>Einheitspreis:</strong></td><td>${parseFloat(order.price).toFixed(2)} €</td></tr>
+        <tr><td><strong>Menge:</strong></td><td>${order.quantity}</td></tr>
+        <tr><td><strong>Gesamtbetrag:</strong></td><td>${totalPrice} €</td></tr>
+        <tr><td><strong>Besteller:</strong></td><td>${order.user || username}</td></tr>
+      </table>
+
+      <hr>
+      <p class="footer">Vielen Dank für Ihre Bestellung!</p>
+    </body>
+    </html>
+  `;
+
+  const receiptWindow = window.open('', '_blank', 'width=800,height=600');
+  if (receiptWindow) {
+    receiptWindow.document.open();
+    receiptWindow.document.write(receiptHTML);
+    receiptWindow.document.close();
+  } else {
+    alert("Pop-up Fenster blockiert. Bitte erlauben Sie Pop-ups für diese Seite.");
+  }
+}
+
+function printQRCode(index) {
+  const order = orders[index];
+  if (!order.barcode) {
+    alert("Kein Barcode für diese Bestellung verfügbar.");
+    return;
+  }
+
+  const qrSrc = `${location.origin}/static/${order.barcode}.png`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>QR Code Drucken</title>
+      <style>
+        body { text-align: center; font-family: Arial, sans-serif; padding: 20px; }
+        img { max-width: 80%; height: auto; }
+      </style>
+    </head>
+    <body onload="window.print()">
+      <h3>QR Code zur Bestellung</h3>
+      <img src="${qrSrc}" alt="QR Code">
+      <p>Referenz: ${order.ref_number}</p>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank', 'width=400,height=500');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  } else {
+    alert("Pop-up blockiert – bitte zulassen.");
+  }
+}
+
+</script>
+
+{% endblock %}

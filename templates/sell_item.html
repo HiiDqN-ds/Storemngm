@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block title %}Artikel verkaufen{% endblock %}
+{% block content %}
+
+<h2>Artikel verkaufen</h2>
+
+<!-- Flash messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <div class="alert alert-{{ 'danger' if category == 'error' else category }} mt-3">
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<form method="POST" id="sellForm">
+  <!-- Search bar -->
+  <div class="mb-3">
+    <label for="search">Produktsuche (Name, Referenznummer oder Barcode)</label>
+    <input type="text" id="search" name="search" class="form-control" placeholder="z. B. Cola 330ml oder 123456789" oninput="filterItems()">
+  </div>
+
+  <!-- Select item -->
+  <div class="mb-3">
+    <label for="barcode">Wähle ein Produkt</label>
+    <select name="barcode" id="barcodeSelect" class="form-select" required onchange="updatePreview()">
+      <option value="">-- Produkt auswählen --</option>
+      {% for item in items %}
+      <option value="{{ item.barcode }}"
+              data-name="{{ item.name }}"
+              data-price="{{ item.selling_price | default(0) }}"
+              data-quantity="{{ item.quantity | default(0) }}"
+              data-img="{{ item.photo_link | default('') }}"
+              {% if (item.quantity | default(0)) <= 5 %}style="color: red;"{% endif %}>
+        {{ item.name }} (Bestand: {{ item.quantity | default(0) }}) – €{{ "%.2f"|format(item.selling_price | default(0)) }}
+      </option>
+      {% endfor %}
+    </select>
+  </div>
+
+  <!-- Product preview -->
+  <div id="preview" class="mb-3" style="display: none;">
+    <img id="productImg" src="" alt="Produktbild" style="max-height: 120px; margin-bottom: 10px;">
+    <p id="productInfo"></p>
+  </div>
+
+  <!-- Quantity -->
+  <div class="mb-3">
+    <label>Anzahl</label>
+    <input type="number" name="quantity" min="1" class="form-control" required value="1">
+  </div>
+
+  <!-- Optional price -->
+  <div class="form-check mb-3">
+    <input type="checkbox" class="form-check-input" id="discount_active" name="discount_active" onchange="togglePriceEdit()">
+    <label class="form-check-label" for="discount_active">Preis ändern</label>
+  </div>
+  <div class="mb-3">
+    <label>Neuer Preis (€)</label>
+    <input type="number" step="0.01" name="price" id="price_input" class="form-control" disabled>
+  </div>
+
+  <!-- Seller input -->
+  <div class="mb-3">
+    <label>Verkäufer (Username)</label>
+    <input type="text" name="seller_username" class="form-control" placeholder="z. B. ahmad123" required>
+  </div>
+
+  <!-- Submit -->
+  <button class="btn btn-success" type="submit">Verkaufen</button>
+</form>
+
+<!-- JS -->
+<script>
+  function togglePriceEdit() {
+    const checkbox = document.getElementById('discount_active');
+    const priceInput = document.getElementById('price_input');
+    priceInput.disabled = !checkbox.checked;
+    if (!checkbox.checked) {
+      priceInput.value = '';
+    }
+  }
+
+  function updatePreview() {
+    const select = document.getElementById('barcodeSelect');
+    const selectedOption = select.options[select.selectedIndex];
+    const preview = document.getElementById('preview');
+    const productImg = document.getElementById('productImg');
+    const productInfo = document.getElementById('productInfo');
+
+    if (!selectedOption.value) {
+      preview.style.display = 'none';
+      productImg.src = '';
+      productInfo.textContent = '';
+      return;
+    }
+
+    preview.style.display = 'block';
+    productImg.src = selectedOption.getAttribute('data-img') || '';
+    productInfo.textContent = `${selectedOption.getAttribute('data-name')} - Bestand: ${selectedOption.getAttribute('data-quantity')} - Preis: €${parseFloat(selectedOption.getAttribute('data-price')).toFixed(2)}`;
+  }
+
+  // Optionally, add a filter function to search items dynamically
+  function filterItems() {
+    const input = document.getElementById('search').value.toLowerCase();
+    const select = document.getElementById('barcodeSelect');
+
+    for (let i = 1; i < select.options.length; i++) { // skip first placeholder option
+      const option = select.options[i];
+      const name = option.getAttribute('data-name').toLowerCase();
+      const barcode = option.value.toLowerCase();
+
+      if (name.includes(input) || barcode.includes(input)) {
+        option.style.display = '';
+      } else {
+        option.style.display = 'none';
+      }
+    }
+  }
+</script>
+
+{% endblock %}

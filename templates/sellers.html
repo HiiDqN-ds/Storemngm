@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Sellers{% endblock %}
+{% block content %}
+<h2>Sellers</h2>
+<a href="{{ url_for('add_seller') }}" class="btn btn-primary mb-3">Add New Seller</a>
+<table class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Username</th>
+      <th>Profile Image</th>
+      <th>Salary</th>
+      <th>Activated</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for seller in sellers %}
+    <tr>
+      <td>{{ seller.username }}</td>
+      <td>
+        {% if seller.profile_img %}
+          <img src="{{ seller.profile_img }}" width="50" alt="Profile Image">
+        {% else %}
+          No Image
+        {% endif %}
+      </td>
+      <td>
+        {{ "%.2f"|format(seller.salary) if seller.salary is defined else "N/A" }}
+      </td>
+      <td>{{ 'Yes' if seller.activated else 'No' }}</td>
+      <td>
+        <a href="{{ url_for('edit_seller', username=seller.username) }}" class="btn btn-sm btn-warning">Edit</a>
+        <form method="POST" action="{{ url_for('delete_seller', username=seller.username) }}" style="display:inline" onsubmit="return confirm('Delete this seller?');">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% else %}
+    <tr><td colspan="5">No sellers found.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

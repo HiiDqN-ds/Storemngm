@@ -1,0 +1,16 @@
+[
+  {
+    "employee": "user",
+    "amount": 1500.0,
+    "source": "Kasse",
+    "note": "fgdfg",
+    "date": "2025-06-26 17:26"
+  },
+  {
+    "employee": "admin",
+    "amount": 25000.0,
+    "source": "Privat",
+    "note": "",
+    "date": "2025-06-26 18:39"
+  }
+]
