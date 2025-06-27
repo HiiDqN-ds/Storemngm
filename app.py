@@ -720,40 +720,48 @@ def seller_items():
 
 
 
+import os
+import json
+from flask import render_template, request, redirect, url_for, session, flash
 
-# List all the Orders
 @app.route('/orders')
 def list_orders():
-    order_file = 'data\orders.json'
+    # Use cross-platform path to the orders file
+    order_file = os.path.join(os.path.dirname(__file__), 'data', 'orders.json')
+    print(f"Looking for orders file at: {order_file}")  # Debug line (visible in Render logs)
 
+    # Role-based access check
     if session.get('role') not in ['admin', 'seller']:
         flash('Zugriff verweigert.', 'danger')
         return redirect(url_for('index'))
 
-    # Load orders
+    # Load orders from file
+    orders = []
     if os.path.exists(order_file):
-        with open(order_file, 'r', encoding='utf-8') as f:
-            try:
+        try:
+            with open(order_file, 'r', encoding='utf-8') as f:
                 orders = json.load(f)
-            except json.JSONDecodeError:
-                orders = []
+        except json.JSONDecodeError:
+            print("JSON decode error in orders.json")
+            orders = []
     else:
-        orders = []
+        print("orders.json file not found")
 
-    # Filter parameters
+    # Optional filtering from query parameters
     user_filter = request.args.get('user', '')
     date_filter = request.args.get('date', '')
 
     if user_filter:
-        orders = [o for o in orders if o['user'] == user_filter]
+        orders = [o for o in orders if o.get('user') == user_filter]
 
     if date_filter:
-        orders = [o for o in orders if o['date'] == date_filter]
+        orders = [o for o in orders if o.get('date') == date_filter]
 
-    # Get all unique users for the dropdown
-    unique_users = sorted(list(set(o['user'] for o in orders)))
+    # Get unique users for dropdown
+    unique_users = sorted(set(o.get('user') for o in orders if 'user' in o))
 
     return render_template('list_orders.html', orders=orders, users=unique_users)
+
 
 
 

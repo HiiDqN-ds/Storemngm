@@ -58,5 +58,17 @@
     "date": "2025-06-26",
     "user": "admin",
     "barcode": "barcodes/code_barres_116207022657"
+  },
+  {
+    "order_number": "213711911660",
+    "product_name": "galaxy A26",
+    "ref_number": "sdadsadasdasd",
+    "description": "",
+    "price": 152.0,
+    "quantity": 1,
+    "total_price": 152.0,
+    "date": "2025-06-27",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_213711911660"
   }
 ]
