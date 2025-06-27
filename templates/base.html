@@ -39,7 +39,8 @@
       outline: none;
     }
     .logo {
-      height: 40px;
+      height: 80px !important;
+      width: auto;
       margin-right: 10px;
     }
     header {
@@ -67,7 +68,6 @@
   <header>
     <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
       <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo" class="logo">
-      <strong>Stock Management</strong>
     </a>
 
     <!-- Navigation based on user role -->
