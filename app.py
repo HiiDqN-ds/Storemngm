@@ -18,6 +18,7 @@ DATA_PATH = './data'
 USERS_FILE = os.path.join(DATA_PATH, 'users.json')
 ITEMS_FILE = os.path.join(DATA_PATH, 'items.json')
 SALES_FILE = os.path.join(DATA_PATH, 'sales.json')
+ORDERS_FILE = os.path.join(DATA_PATH, 'orders.json')
 PAYMENTS_FILE = os.path.join(DATA_PATH, 'salary_payments.json')
 
 # Helper to load JSON file
@@ -768,11 +769,12 @@ def list_orders():
 
 # Orders CRUD
 # Edit Route
+# Edit Route
 @app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
 @login_required()
 def edit_order(index):
-    order_file = r'data\orders.json'
-    with open(order_file, 'r', encoding='utf-8') as f:
+    # Load orders using the defined path
+    with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
         orders = json.load(f)
 
     if index >= len(orders):
@@ -782,21 +784,26 @@ def edit_order(index):
     order = orders[index]
 
     if request.method == 'POST':
-        order['product_name'] = request.form['product_name']
-        order['ref_number'] = request.form['ref_number']
-        order['description'] = request.form['description']
-        order['price'] = float(request.form['price'])
-        order['quantity'] = int(request.form['quantity'])
-        order['total_price'] = order['price'] * order['quantity']
-        orders[index] = order
+        try:
+            order['product_name'] = request.form['product_name']
+            order['ref_number'] = request.form['ref_number']
+            order['description'] = request.form['description']
+            order['price'] = float(request.form['price'])
+            order['quantity'] = int(request.form['quantity'])
+            order['total_price'] = order['price'] * order['quantity']
+            orders[index] = order
 
-        with open(order_file, 'w', encoding='utf-8') as f:
-            json.dump(orders, f, indent=2, ensure_ascii=False)
+            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(orders, f, indent=2, ensure_ascii=False)
 
-        flash('Bestellung aktualisiert.', 'success')
-        return redirect(url_for('list_orders'))
+            flash('Bestellung aktualisiert.', 'success')
+            return redirect(url_for('list_orders'))
+        except Exception as e:
+            flash(f'Fehler beim Speichern: {e}', 'danger')
+            return redirect(url_for('edit_order', index=index))
 
     return render_template('edit_order.html', order=order, index=index)
+
 
 # Orders CRUD
 # Delete Route
