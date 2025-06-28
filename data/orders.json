@@ -1,17 +1,5 @@
 [
   {
-    "order_number": "629910481592",
-    "product_name": "galaxy A26",
-    "ref_number": "dfgfdg",
-    "description": "dfgfd",
-    "price": 777.0,
-    "quantity": 1,
-    "total_price": 777.0,
-    "date": "2025-06-25",
-    "user": "admin",
-    "barcode": "barcodes/code_barres_629910481592"
-  },
-  {
     "order_number": "982674814445",
     "product_name": "Iphone14 Pro Max",
     "ref_number": "xcvxcv",

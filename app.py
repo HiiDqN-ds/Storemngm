@@ -810,17 +810,22 @@ def edit_order(index):
 @app.route('/orders/delete/<int:index>', methods=['POST'])
 @login_required()
 def delete_order(index):
-    order_file = r'data\orders.json'
-    with open(order_file, 'r', encoding='utf-8') as f:
-        orders = json.load(f)
+    try:
+        with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
+            orders = json.load(f)
 
-    if index < len(orders):
-        orders.pop(index)
-        with open(order_file, 'w', encoding='utf-8') as f:
-            json.dump(orders, f, indent=2, ensure_ascii=False)
-        flash('Bestellung gelöscht.', 'success')
+        if index < len(orders):
+            orders.pop(index)
+            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+                json.dump(orders, f, indent=2, ensure_ascii=False)
+            flash('Bestellung gelöscht.', 'success')
+        else:
+            flash('Ungültiger Index. Bestellung nicht gefunden.', 'danger')
+    except Exception as e:
+        flash(f'Fehler beim Löschen: {e}', 'danger')
 
     return redirect(url_for('list_orders'))
+
 
 # save_salary_payment
 def save_salary_payment(payment_record):
