@@ -103,71 +103,86 @@
 
 
 
-<!-- CSV Download Buttons -->
-<div style="margin-bottom: 40px;">
-  <a href="{{ url_for('download_sales_csv') }}" style="margin-right: 15px; padding: 10px 20px; background-color: #3a7d44; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">Verkaufs-Historie CSV herunterladen</a>
-  <a href="{{ url_for('download_purchases_csv') }}" style="padding: 10px 20px; background-color: #a83a3a; color: white; text-decoration: none; border-radius: 5px; font-weight: 600;">Einkaufs-Historie CSV herunterladen</a>
-</div>
 
 <!-- Sales and Purchases side by side -->
 <div style="display: flex; gap: 30px; flex-wrap: wrap;">
 
-  <!-- Sales section -->
-  <section style="flex: 1; min-width: 320px; border: 2px solid #a8d5a2; padding: 18px; border-radius: 10px; background: #f0faf0;">
-    <h2 style="color: #3a7d44; margin-bottom: 15px;">Verkäufe (Sales)</h2>
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead style="background-color: #d9ead3;">
-        <tr>
-          <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: left;">Datum</th>
-          <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: left;">Artikel</th>
-          <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: center;">Menge</th>
-          <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: right;">Preis pro Stück</th>
-          <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: right;">Gesamtpreis</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for sale in sales %}
-        <tr style="border-bottom: 1px solid #c5e1a5;">
-          <td style="padding: 8px;">{{ sale.date | datetimeformat }}</td>
-          <td style="padding: 8px;">{{ sale.name if sale.name else 'Unbekannt' }}</td>
-          <td style="padding: 8px; text-align: center;">{{ sale.quantity|default(0) }}</td>
-          <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(sale.sale_price|default(0)) }}</td>
-          <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(sale.total_price|default(0)) }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" style="text-align: center; padding: 15px;">Keine Verkaufsdaten vorhanden.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
+<!-- Sales section -->
+<section style="flex: 1; min-width: 320px; border: 2px solid #a8d5a2; padding: 18px; border-radius: 10px; background: #f0faf0; position: relative;">
+  <h2 style="color: #3a7d44; margin-bottom: 15px;">Verkäufe (Sales)</h2>
+  
+  <!-- Icons container -->
+  <div style="position: absolute; top: 18px; right: 18px; display: flex; gap: 10px;">
+    <!-- Download icon -->
+    <a href="{{ url_for('download_sales_csv') }}" title="CSV herunterladen" style="color: #3a7d44; font-size: 1.3em;">
+      <i class="fa-solid fa-download"></i>
+    </a>
+  </div>
 
-  <!-- Purchases section -->
-  <section style="flex: 1; min-width: 320px; border: 2px solid #e79a9a; padding: 18px; border-radius: 10px; background: #faf0f0;">
-    <h2 style="color: #a83a3a; margin-bottom: 15px;">Einkäufe (Purchases)</h2>
-    <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
-      <thead>
-        <tr style="background-color: #f8d7da; color: #721c24;">
-          <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: left;">Datum</th>
-          <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: left;">Artikel</th>
-          <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: center;">Menge</th>
-          <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: right;">Preis pro Stück</th>
-          <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: right;">Gesamtpreis</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for purchase in purchases %}
-        <tr style="border-bottom: 1px solid #f1b0b7;">
-          <td style="padding: 8px;">{{ purchase.date | datetimeformat }}</td>
-          <td style="padding: 8px;">{{ purchase.product_name if purchase.product_name else 'Unbekannt' }}</td>
-          <td style="padding: 8px; text-align: center;">{{ purchase.quantity|default(0) }}</td>
-          <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(purchase.purchase_price|default(0)) }}</td>
-          <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(purchase.total_price|default(0)) }}</td>
-        </tr>
-        {% else %}
-        <tr><td colspan="5" style="text-align: center; padding: 15px;">Keine Einkaufsdaten vorhanden.</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </section>
+  <table style="width: 100%; border-collapse: collapse;">
+    <thead style="background-color: #d9ead3;">
+      <tr>
+        <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: left;">Datum</th>
+        <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: left;">Artikel</th>
+        <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: center;">Menge</th>
+        <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: right;">Preis pro Stück</th>
+        <th style="padding: 10px; border-bottom: 2px solid #b4d2b4; text-align: right;">Gesamtpreis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for sale in sales %}
+      <tr style="border-bottom: 1px solid #c5e1a5;">
+        <td style="padding: 8px;">{{ sale.date | datetimeformat }}</td>
+        <td style="padding: 8px;">{{ sale.name if sale.name else 'Unbekannt' }}</td>
+        <td style="padding: 8px; text-align: center;">{{ sale.quantity|default(0) }}</td>
+        <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(sale.sale_price|default(0)) }}</td>
+        <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(sale.total_price|default(0)) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align: center; padding: 15px;">Keine Verkaufsdaten vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<!-- Purchases section -->
+<section style="flex: 1; min-width: 320px; border: 2px solid #e79a9a; padding: 18px; border-radius: 10px; background: #faf0f0; position: relative;">
+  <h2 style="color: #a83a3a; margin-bottom: 15px;">Einkäufe (Purchases)</h2>
+  
+  <!-- Icons container -->
+  <div style="position: absolute; top: 18px; right: 18px; display: flex; gap: 10px;">
+    <!-- Download icon -->
+    <a href="{{ url_for('download_purchases_csv') }}" title="CSV herunterladen" style="color: #a83a3a; font-size: 1.3em;">
+      <i class="fa-solid fa-download"></i>
+    </a>
+  </div>
+
+  <table style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
+    <thead>
+      <tr style="background-color: #f8d7da; color: #721c24;">
+        <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: left;">Datum</th>
+        <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: left;">Artikel</th>
+        <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: center;">Menge</th>
+        <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: right;">Preis pro Stück</th>
+        <th style="padding: 10px; border-bottom: 2px solid #f5c6cb; text-align: right;">Gesamtpreis</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for purchase in purchases %}
+      <tr style="border-bottom: 1px solid #f1b0b7;">
+        <td style="padding: 8px;">{{ purchase.date | datetimeformat }}</td>
+        <td style="padding: 8px;">{{ purchase.product_name if purchase.product_name else 'Unbekannt' }}</td>
+        <td style="padding: 8px; text-align: center;">{{ purchase.quantity|default(0) }}</td>
+        <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(purchase.purchase_price|default(0)) }}</td>
+        <td style="padding: 8px; text-align: right;">€{{ "{:,.2f}".format(purchase.total_price|default(0)) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align: center; padding: 15px;">Keine Einkaufsdaten vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+
 </div>
 {% endblock %}
