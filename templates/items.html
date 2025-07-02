@@ -7,12 +7,11 @@
 <table class="table table-bordered">
   <thead>
     <tr>
-      <th>Name</th>
+      <th>Produktname</th>
       <th>Barcode</th>
-      <th>Purchase Price</th>
-      <th>Selling Price</th>
-      <th>Min Selling Price</th>
-      <th>Price</th>
+      <th>Purchase Price (€)</th>
+      <th>Selling Price (€)</th>
+      <th>Min Selling Price (€)</th>
       <th>Quantity</th>
       <th>Description</th>
       <th>Photo</th>
@@ -22,12 +21,11 @@
   <tbody>
     {% for item in items %}
     <tr>
-      <td>{{ item.name }}</td>
+      <td>{{ item.product_name }}</td>
       <td>{{ item.barcode }}</td>
-      <td>${{ "%.2f"|format(item.purchase_price) }}</td>
-      <td>${{ "%.2f"|format(item.selling_price) }}</td>
-      <td>${{ "%.2f"|format(item.min_selling_price) }}</td>
-      <td>${{ "%.2f"|format(item.price) }}</td>
+      <td>{{ "%.2f"|format(item.purchase_price) }}</td>
+      <td>{{ "%.2f"|format(item.selling_price) }}</td>
+      <td>{{ "%.2f"|format(item.min_selling_price) }}</td>
       <td>{{ item.quantity }}</td>
       <td>{{ item.description }}</td>
       <td>
@@ -45,7 +43,7 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="10">No items found.</td></tr>
+    <tr><td colspan="9">No items found.</td></tr>
     {% endfor %}
   </tbody>
 </table>

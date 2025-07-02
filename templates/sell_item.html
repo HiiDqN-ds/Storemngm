@@ -2,123 +2,139 @@
 {% block title %}Artikel verkaufen{% endblock %}
 {% block content %}
 
-<h2>Artikel verkaufen</h2>
+<div class="container mt-4">
+  <h2 class="mb-4">🛒 Artikel verkaufen</h2>
 
-<!-- Flash messages -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      <div class="alert alert-{{ 'danger' if category == 'error' else category }} mt-3">
-        {{ message }}
-      </div>
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
-<form method="POST" id="sellForm">
-  <!-- Search bar -->
-  <div class="mb-3">
-    <label for="search">Produktsuche (Name, Referenznummer oder Barcode)</label>
-    <input type="text" id="search" name="search" class="form-control" placeholder="z. B. Cola 330ml oder 123456789" oninput="filterItems()">
-  </div>
-
-  <!-- Select item -->
-  <div class="mb-3">
-    <label for="barcode">Wähle ein Produkt</label>
-    <select name="barcode" id="barcodeSelect" class="form-select" required onchange="updatePreview()">
-      <option value="">-- Produkt auswählen --</option>
-      {% for item in items %}
-      <option value="{{ item.barcode }}"
-              data-name="{{ item.name }}"
-              data-price="{{ item.selling_price | default(0) }}"
-              data-quantity="{{ item.quantity | default(0) }}"
-              data-img="{{ item.photo_link | default('') }}"
-              {% if (item.quantity | default(0)) <= 5 %}style="color: red;"{% endif %}>
-        {{ item.name }} (Bestand: {{ item.quantity | default(0) }}) – €{{ "%.2f"|format(item.selling_price | default(0)) }}
-      </option>
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
       {% endfor %}
-    </select>
-  </div>
+    {% endif %}
+  {% endwith %}
 
-  <!-- Product preview -->
-  <div id="preview" class="mb-3" style="display: none;">
-    <img id="productImg" src="" alt="Produktbild" style="max-height: 120px; margin-bottom: 10px;">
-    <p id="productInfo"></p>
-  </div>
+  <form method="POST" id="sellForm">
+    <button type="button" class="btn btn-outline-primary mb-3" onclick="addItemRow()">+ Produkt hinzufügen</button>
 
-  <!-- Quantity -->
-  <div class="mb-3">
-    <label>Anzahl</label>
-    <input type="number" name="quantity" min="1" class="form-control" required value="1">
-  </div>
+    <div id="itemsContainer">
+      <!-- Dynamic product rows will be injected here -->
+    </div>
 
-  <!-- Optional price -->
-  <div class="form-check mb-3">
-    <input type="checkbox" class="form-check-input" id="discount_active" name="discount_active" onchange="togglePriceEdit()">
-    <label class="form-check-label" for="discount_active">Preis ändern</label>
-  </div>
-  <div class="mb-3">
-    <label>Neuer Preis (€)</label>
-    <input type="number" step="0.01" name="price" id="price_input" class="form-control" disabled>
-  </div>
+    <!-- Seller username input -->
+    <div class="mb-3">
+      <label for="seller_username" class="form-label">Verkäufer (Benutzername)</label>
+      <input type="text" id="seller_username" name="seller_username" class="form-control" placeholder="z. B. ahmad123" value="{{ session.username }}" required>
+    </div>
 
-  <!-- Seller input -->
-  <div class="mb-3">
-    <label>Verkäufer (Username)</label>
-    <input type="text" name="seller_username" class="form-control" placeholder="z. B. ahmad123" required>
-  </div>
+    <button type="submit" class="btn btn-success">✅ Verkaufen</button>
+  </form>
+</div>
 
-  <!-- Submit -->
-  <button class="btn btn-success" type="submit">Verkaufen</button>
-</form>
-
-<!-- JS -->
 <script>
-  function togglePriceEdit() {
-    const checkbox = document.getElementById('discount_active');
-    const priceInput = document.getElementById('price_input');
-    priceInput.disabled = !checkbox.checked;
-    if (!checkbox.checked) {
-      priceInput.value = '';
-    }
-  }
+  const itemsData = [
+    {% for item in items %}
+    {
+      barcode: "{{ item.barcode }}",
+      name: "{{ item.name | escape }}",
+      price: {{ item.selling_price | default(0) }},
+      quantity: {{ item.quantity | default(0) }},
+      img: "{{ item.photo_link | default('') }}"
+    },
+    {% endfor %}
+  ];
 
-  function updatePreview() {
-    const select = document.getElementById('barcodeSelect');
-    const selectedOption = select.options[select.selectedIndex];
-    const preview = document.getElementById('preview');
-    const productImg = document.getElementById('productImg');
-    const productInfo = document.getElementById('productInfo');
+  function addItemRow() {
+    const container = document.getElementById('itemsContainer');
+    const rowIndex = container.children.length;
 
-    if (!selectedOption.value) {
-      preview.style.display = 'none';
-      productImg.src = '';
-      productInfo.textContent = '';
-      return;
-    }
+    const row = document.createElement('div');
+    row.classList.add('mb-4', 'p-3', 'border', 'rounded', 'bg-light');
+    row.dataset.index = rowIndex;
 
-    preview.style.display = 'block';
-    productImg.src = selectedOption.getAttribute('data-img') || '';
-    productInfo.textContent = `${selectedOption.getAttribute('data-name')} - Bestand: ${selectedOption.getAttribute('data-quantity')} - Preis: €${parseFloat(selectedOption.getAttribute('data-price')).toFixed(2)}`;
-  }
+    // 🔍 Search Input
+    row.innerHTML += `
+      <label for="items_${rowIndex}_search" class="form-label">🔍 Produkt suchen</label>
+      <input type="text" id="items_${rowIndex}_search" class="form-control mb-2" placeholder="Produktname oder Barcode">
+    `;
 
-  // Optionally, add a filter function to search items dynamically
-  function filterItems() {
-    const input = document.getElementById('search').value.toLowerCase();
-    const select = document.getElementById('barcodeSelect');
+    // 📦 Select
+    let selectHTML = `
+      <label for="items_${rowIndex}_barcode" class="form-label">📦 Produkt auswählen</label>
+      <select name="items[${rowIndex}][barcode]" id="items_${rowIndex}_barcode" class="form-select mb-2" required>
+        <option value="">-- Produkt auswählen --</option>
+    `;
 
-    for (let i = 1; i < select.options.length; i++) { // skip first placeholder option
-      const option = select.options[i];
-      const name = option.getAttribute('data-name').toLowerCase();
-      const barcode = option.value.toLowerCase();
+    itemsData.forEach(item => {
+      const warning = item.quantity <= 5 ? '⚠️ ' : '';
+      selectHTML += `<option value="${item.barcode}">${warning}${item.name} (Bestand: ${item.quantity}) – €${item.price.toFixed(2)}</option>`;
+    });
 
-      if (name.includes(input) || barcode.includes(input)) {
-        option.style.display = '';
-      } else {
-        option.style.display = 'none';
+    selectHTML += `</select>`;
+    row.innerHTML += selectHTML;
+
+    // 🔢 Quantity
+    row.innerHTML += `
+      <label for="items_${rowIndex}_quantity" class="form-label">🔢 Anzahl</label>
+      <input type="number" min="1" value="1" name="items[${rowIndex}][quantity]" id="items_${rowIndex}_quantity" class="form-control mb-2" required>
+    `;
+
+    // 💸 Discount Option
+    row.innerHTML += `
+      <div class="form-check form-switch mb-2">
+        <input class="form-check-input" type="checkbox" id="items_${rowIndex}_discount_active" name="items[${rowIndex}][discount_active]">
+        <label class="form-check-label" for="items_${rowIndex}_discount_active">💸 Preis ändern</label>
+      </div>
+      <label for="items_${rowIndex}_price" class="form-label">💰 Neuer Preis (€)</label>
+      <input type="number" step="0.01" name="items[${rowIndex}][price]" id="items_${rowIndex}_price" class="form-control mb-2" disabled>
+    `;
+
+    // ❌ Remove button
+    row.innerHTML += `
+      <button type="button" class="btn btn-outline-danger mt-2" onclick="this.closest('div').remove()">🗑 Entfernen</button>
+    `;
+
+    container.appendChild(row);
+
+    // Enable/disable price input
+    row.querySelector(`#items_${rowIndex}_discount_active`).addEventListener('change', function () {
+      const priceInput = row.querySelector(`#items_${rowIndex}_price`);
+      priceInput.disabled = !this.checked;
+      if (!this.checked) priceInput.value = '';
+    });
+
+    // Search input: auto-select matching product in dropdown, no hiding of options
+    row.querySelector(`#items_${rowIndex}_search`).addEventListener('input', function () {
+      const filter = this.value.toLowerCase().trim();
+      const select = row.querySelector(`#items_${rowIndex}_barcode`);
+
+      if (filter === '') {
+        select.value = '';
+        return;
       }
-    }
+
+      let matchedValue = '';
+      for (const option of select.options) {
+        const text = option.textContent.toLowerCase();
+        const val = option.value.toLowerCase();
+        if (option.value !== '' && (text.includes(filter) || val.includes(filter))) {
+          matchedValue = option.value;
+          break;
+        }
+      }
+
+      select.value = matchedValue || '';
+    });
   }
+
+  // Auto add first row on page load
+  window.addEventListener('DOMContentLoaded', () => {
+    addItemRow();
+  });
 </script>
+
 
 {% endblock %}
