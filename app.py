@@ -454,7 +454,7 @@ def list_items():
 
     # Optional: sort alphabetically
     items.sort(key=lambda x: x['product_name'].lower())
-    
+    items = items[::-1] 
     return render_template('items.html', items=items)
 
 
@@ -956,9 +956,6 @@ def list_orders():
 
 
 # Orders CRUD
-# Add Route 
-
-
 # Edit Route
 @app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
 @login_required()

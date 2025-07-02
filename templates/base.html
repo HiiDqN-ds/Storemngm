@@ -94,7 +94,9 @@
         <a href="{{ url_for('list_items') }}" class="btn nav-btn"><i class="bi bi-box-seam me-1"></i> Produkte</a>
 
         <div class="dropdown">
-          <button class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-people me-1"></i> Mitarbeiter</button>
+          <button class="btn nav-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-people me-1"></i> Mitarbeiter
+          </button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('list_sellers') }}"><i class="bi bi-people me-1"></i> Verkäufer</a></li>
             <li><hr class="dropdown-divider"></li>
@@ -104,7 +106,9 @@
         </div>
 
         <div class="dropdown">
-          <button class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-cash me-1"></i> Verkauf</button>
+          <button class="btn nav-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-cash me-1"></i> Verkauf
+          </button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('sell_item') }}"><i class="bi bi-cash-coin me-1"></i> Verkaufen</a></li>
             <li><a class="dropdown-item" href="{{ url_for('admin_sales') }}"><i class="bi bi-receipt me-1"></i> Meine Verkäufe</a></li>
@@ -112,9 +116,10 @@
         </div>
 
         <div class="dropdown">
-          <button class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-bag me-1"></i> Einkauf</button>
+          <button class="btn nav-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-bag me-1"></i> Einkauf
+          </button>
           <ul class="dropdown-menu">
-            <!-- <li><a class="dropdown-item" href="{{ url_for('order') }}"><i class="bi bi-cart-plus me-1"></i> Einkauf</a></li>-->
             <li><a class="dropdown-item" href="{{ url_for('list_orders') }}"><i class="bi bi-list-check me-1"></i> Bestellungen</a></li>
           </ul>
         </div>
@@ -126,7 +131,9 @@
         <a href="{{ url_for('seller_items') }}" class="btn nav-btn"><i class="bi bi-box-seam me-1"></i> Produkte</a>
 
         <div class="dropdown">
-          <button class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-cash me-1"></i> Verkauf</button>
+          <button class="btn nav-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-cash me-1"></i> Verkauf
+          </button>
           <ul class="dropdown-menu">
             <li><a class="dropdown-item" href="{{ url_for('sell_item') }}"><i class="bi bi-cash-coin me-1"></i> Verkaufen</a></li>
             <li><a class="dropdown-item" href="{{ url_for('seller_sales') }}"><i class="bi bi-receipt me-1"></i> Meine Verkäufe</a></li>
@@ -134,9 +141,10 @@
         </div>
 
         <div class="dropdown">
-          <button class="btn dropdown-toggle" data-bs-toggle="dropdown"><i class="bi bi-bag me-1"></i> Einkauf</button>
+          <button class="btn nav-btn" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-bag me-1"></i> Einkauf
+          </button>
           <ul class="dropdown-menu">
-            <!-- <li><a class="dropdown-item" href="{{ url_for('order') }}"><i class="bi bi-cart-plus me-1"></i> Einkauf</a></li>-->
             <li><a class="dropdown-item" href="{{ url_for('list_orders') }}"><i class="bi bi-list-check me-1"></i> Bestellungen</a></li>
           </ul>
         </div>
@@ -146,6 +154,7 @@
     </nav>
   </div>
 </header>
+
 
 
   <!-- Flash Messages -->

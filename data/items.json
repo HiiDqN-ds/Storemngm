@@ -1,136 +1,114 @@
 [
-  {
-    "name": "Produkt A",
-    "barcode": "111111",
-    "price": 1.0,
-    "quantity": 36,
-    "photo_link": "sdfsdfsdf",
-    "purchase_price": 1.0,
-    "selling_price": 1.0,
-    "min_selling_price": 1.0,
-    "description": "sdfsdfsdfdsfsd"
-  },
-  {
-    "name": "Produkt B",
-    "barcode": "xe10kolllg",
-    "price": 15.0,
-    "quantity": 20,
-    "photo_link": "",
-    "purchase_price": 15.0,
-    "selling_price": 15.0,
-    "min_selling_price": 15.0,
-    "description": "sdfsdfsdf"
-  },
-  {
-    "name": "Produkt C",
-    "barcode": "xe10kol55g",
-    "price": 15.0,
-    "quantity": 43,
-    "photo_link": "",
-    "purchase_price": 15.0,
-    "selling_price": 15.0,
-    "min_selling_price": 15.0,
-    "description": "fdsdfsdf"
-  },
-  {
-    "product_name": "galaxy A26",
-    "barcode": "705619264861",
-    "purchase_price": 120.0,
-    "selling_price": 144.0,
-    "min_selling_price": 132.0,
-    "quantity": 0,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin",
-    "name": "galaxy A26",
-    "price": 132.0
-  },
-  {
-    "product_name": "fgfghdfg",
-    "barcode": "194269753593",
-    "purchase_price": 656.0,
-    "selling_price": 787.2,
-    "min_selling_price": 721.6,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "",
-    "seller": "user"
-  },
-  {
-    "product_name": "fgfdg",
-    "barcode": "833103903272",
-    "purchase_price": 888.0,
-    "selling_price": 1065.6,
-    "min_selling_price": 976.8,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "dfg",
-    "seller": "user"
-  },
-  {
-    "product_name": "gdfgdf",
-    "barcode": "411198755222",
-    "purchase_price": 9999.0,
-    "selling_price": 11998.8,
-    "min_selling_price": 10998.9,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "dfgfdg",
-    "seller": "user"
-  },
-  {
-    "product_name": "handyhandyhandy",
-    "barcode": "135858168809",
-    "purchase_price": 852.0,
-    "selling_price": 1022.4,
-    "min_selling_price": 937.2,
-    "quantity": 2,
-    "photo_link": "",
-    "description": "handyhandyhandy",
-    "seller": "user"
-  },
-  {
-    "product_name": "dfgdfg",
-    "barcode": "725689087324",
-    "purchase_price": 6666666.0,
-    "selling_price": 7999999.2,
-    "min_selling_price": 7333332.6,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "dfgdfgdf",
-    "seller": "user"
-  },
-  {
-    "product_name": "galaxy A26jhhh",
-    "barcode": "267326013292",
-    "purchase_price": 7415963.0,
-    "selling_price": 8899155.6,
-    "min_selling_price": 8157559.3,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "galaxy A26jhhh",
-    "seller": "user"
-  },
-  {
-    "product_name": "qqqqqqqqqqqghfh",
-    "barcode": "504383735776",
-    "purchase_price": 555555.0,
-    "selling_price": 666666.0,
-    "min_selling_price": 611110.5,
-    "quantity": 2,
-    "photo_link": "",
-    "description": "",
-    "seller": "user"
-  },
-  {
-    "product_name": "retetet",
-    "barcode": "860120066215",
-    "purchase_price": 56556.0,
-    "selling_price": 67867.2,
-    "min_selling_price": 62211.6,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "78575",
-    "seller": "user"
-  }
+    {
+        "name": "Produkt A",
+        "barcode": "111111",
+        "price": 1.0,
+        "quantity": 36,
+        "photo_link": "sdfsdfsdf",
+        "purchase_price": 1.0,
+        "selling_price": 1.0,
+        "min_selling_price": 1.0,
+        "description": "sdfsdfsdfdsfsd"
+    },
+    {
+        "name": "Produkt B",
+        "barcode": "xe10kolllg",
+        "price": 15.0,
+        "quantity": 20,
+        "photo_link": "",
+        "purchase_price": 15.0,
+        "selling_price": 15.0,
+        "min_selling_price": 15.0,
+        "description": "sdfsdfsdf"
+    },
+    {
+        "product_name": "galaxy A26",
+        "barcode": "705619264861",
+        "purchase_price": 120.0,
+        "selling_price": 144.0,
+        "min_selling_price": 132.0,
+        "quantity": 0,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "name": "galaxy A26",
+        "price": 132.0
+    },
+    {
+        "product_name": "fgfghdfg",
+        "barcode": "194269753593",
+        "purchase_price": 656.0,
+        "selling_price": 787.2,
+        "min_selling_price": 721.6,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "",
+        "seller": "user"
+    },
+    {
+        "product_name": "fgfdg",
+        "barcode": "833103903272",
+        "purchase_price": 888.0,
+        "selling_price": 1065.6,
+        "min_selling_price": 976.8,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "dfg",
+        "seller": "user"
+    },
+    {
+        "product_name": "gdfgdf",
+        "barcode": "411198755222",
+        "purchase_price": 9999.0,
+        "selling_price": 11998.8,
+        "min_selling_price": 10998.9,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "dfgfdg",
+        "seller": "user"
+    },
+    {
+        "product_name": "handyhandyhandy",
+        "barcode": "135858168809",
+        "purchase_price": 852.0,
+        "selling_price": 1022.4,
+        "min_selling_price": 937.2,
+        "quantity": 2,
+        "photo_link": "",
+        "description": "handyhandyhandy",
+        "seller": "user"
+    },
+    {
+        "product_name": "dfgdfg",
+        "barcode": "725689087324",
+        "purchase_price": 6666666.0,
+        "selling_price": 7999999.2,
+        "min_selling_price": 7333332.6,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "dfgdfgdf",
+        "seller": "user"
+    },
+    {
+        "product_name": "galaxy A26jhhh",
+        "barcode": "267326013292",
+        "purchase_price": 7415963.0,
+        "selling_price": 8899155.6,
+        "min_selling_price": 8157559.3,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "galaxy A26jhhh",
+        "seller": "user"
+    },
+    {
+        "name": "test",
+        "barcode": "xxxx1568",
+        "purchase_price": 145.0,
+        "selling_price": 145.0,
+        "min_selling_price": 145.0,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "FGFDG",
+        "seller": "admin"
+    }
 ]
