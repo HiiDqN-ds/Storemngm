@@ -368,7 +368,7 @@ def seller_dashboard():
 
     # Get item names for top sold items
     top_items_detail = [{
-        'name': next((i['name'] for i in items if i['barcode'] == barcode), barcode),
+        'name': next((i.get('name', i.get('product_name', 'Unbenannt')) for i in items if i.get('barcode') == barcode), barcode),
         'quantity': qty
     } for barcode, qty in top_items]
 
@@ -975,9 +975,20 @@ def load_items_for_seller(username):
 # Load normalize_items
 def normalize_items(items):
     for item in items:
-        if 'name' not in item and 'product_name' in item:
-            item['name'] = item['product_name']
+        item['name'] = item.get('name') or item.get('product_name') or 'Unbenannt'
+        item['product_name'] = item.get('product_name') or item.get('name') or 'Unbenannt'
+        item['barcode'] = item.get('barcode', '')
+        item['quantity'] = int(item.get('quantity', 0))
+        item['purchase_price'] = float(item.get('purchase_price', 0))
+        item['selling_price'] = float(item.get('selling_price', 0))
+        item['min_selling_price'] = float(item.get('min_selling_price', 0))
+        item['price'] = float(item.get('price', item.get('selling_price', 0)))
+        item['description'] = item.get('description', '')
+        item['photo_link'] = item.get('photo_link') or item.get('image_url', '')
     return items
+def load_items():
+    items = load_json(ITEMS_FILE)
+    return normalize_items(items)
 
 # Load Items for User/Seller
 def load_items_for_seller(username):

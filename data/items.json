@@ -1,46 +1,57 @@
 [
-  {
-    "product_name": "Produkte A",
-    "barcode": "118558299397",
-    "purchase_price": 8569.0,
-    "selling_price": 10282.8,
-    "min_selling_price": 9425.9,
-    "quantity": 9,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin"
-  },
-  {
-    "product_name": "galaxy A26",
-    "barcode": "102972051822",
-    "purchase_price": 5.0,
-    "selling_price": 6.0,
-    "min_selling_price": 5.5,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "werwer",
-    "seller": "admin"
-  },
-  {
-    "product_name": "charger",
-    "barcode": "340969359497",
-    "purchase_price": 10.0,
-    "selling_price": 12.0,
-    "min_selling_price": 11.0,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin"
-  },
-  {
-    "product_name": "produkt B",
-    "barcode": "805364187661",
-    "purchase_price": 4515.0,
-    "selling_price": 5418.0,
-    "min_selling_price": 4966.5,
-    "quantity": 455,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin"
-  }
+    {
+        "product_name": "Produkte A",
+        "barcode": "118558299397",
+        "purchase_price": 8569.0,
+        "selling_price": 10282.8,
+        "min_selling_price": 9425.9,
+        "quantity": 8,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin"
+    },
+    {
+        "product_name": "galaxy A26",
+        "barcode": "102972051822",
+        "purchase_price": 5.0,
+        "selling_price": 6.0,
+        "min_selling_price": 5.5,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "werwer",
+        "seller": "admin"
+    },
+    {
+        "product_name": "charger",
+        "barcode": "340969359497",
+        "purchase_price": 10.0,
+        "selling_price": 12.0,
+        "min_selling_price": 11.0,
+        "quantity": 0,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin"
+    },
+    {
+        "product_name": "produkt B",
+        "barcode": "805364187661",
+        "purchase_price": 4515.0,
+        "selling_price": 5418.0,
+        "min_selling_price": 4966.5,
+        "quantity": 454,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin"
+    },
+    {
+        "product_name": "qqqqqqqqqqq",
+        "barcode": "770611424222",
+        "purchase_price": 50.0,
+        "selling_price": 60.0,
+        "min_selling_price": 55.0,
+        "quantity": 145,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin"
+    }
 ]

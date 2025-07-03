@@ -1,12 +1,42 @@
 [
     {
         "seller": "admin",
-        "barcode": "102972051822",
-        "name": "galaxy A26",
+        "barcode": "770611424222",
+        "name": "qqqqqqqqqqq",
         "quantity": 1,
-        "sale_price": 6.0,
-        "purchase_price": 5.0,
-        "total_price": 6.0,
-        "date": "2025-07-03T22:19:55.894097"
+        "sale_price": 60.0,
+        "purchase_price": 50.0,
+        "total_price": 60.0,
+        "date": "2025-07-03T23:57:09.199087"
+    },
+    {
+        "seller": "admin",
+        "barcode": "805364187661",
+        "name": "produkt B",
+        "quantity": 1,
+        "sale_price": 5418.0,
+        "purchase_price": 4515.0,
+        "total_price": 5418.0,
+        "date": "2025-07-03T23:59:24.949729"
+    },
+    {
+        "seller": "admin",
+        "barcode": "340969359497",
+        "name": "charger",
+        "quantity": 1,
+        "sale_price": 12.0,
+        "purchase_price": 10.0,
+        "total_price": 12.0,
+        "date": "2025-07-04T00:01:47.628697"
+    },
+    {
+        "seller": "admin",
+        "barcode": "118558299397",
+        "name": "Produkte A",
+        "quantity": 1,
+        "sale_price": 10282.8,
+        "purchase_price": 8569.0,
+        "total_price": 10282.8,
+        "date": "2025-07-04T00:02:19.591864"
     }
 ]
