@@ -13,7 +13,7 @@
         "price": 10282.8
     },
     {
-        "product_name": "galaxy A26",
+        "product_name": "Galaxy A26",
         "barcode": "102972051822",
         "purchase_price": 5.0,
         "selling_price": 6.0,
@@ -26,7 +26,7 @@
         "price": 6.0
     },
     {
-        "product_name": "charger",
+        "product_name": "USB Charger",
         "barcode": "340969359497",
         "purchase_price": 10.0,
         "selling_price": 12.0,
