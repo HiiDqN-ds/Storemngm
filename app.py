@@ -371,7 +371,7 @@ def seller_dashboard():
         'name': next((i.get('name', i.get('product_name', 'Unbenannt')) for i in items if i.get('barcode') == barcode), barcode),
         'quantity': qty
     } for barcode, qty in top_items]
-
+    seller = seller[::-1]
     return render_template(
         "seller_dashboard.html",
         seller=seller,
@@ -396,6 +396,7 @@ def list_sellers():
         seller.setdefault('salary', 0.0)
         seller.setdefault('profile_img', '')
         seller.setdefault('activated', False)
+    seller = seller[::-1]
     return render_template('sellers.html', sellers=sellers)
 
 # Admin: Add Seller
@@ -453,7 +454,7 @@ def edit_seller(username):
         save_users(sellers)
         flash('Seller updated successfully', 'success')
         return redirect(url_for('list_sellers'))
-
+    seller = seller[::-1]
     return render_template('edit_seller.html', seller=seller)
 
 
@@ -1009,6 +1010,7 @@ def seller_items():
     username = session['username']
     items = load_items_for_seller(username)
     items = normalize_items(items)  # Ensure all items have 'name'
+    items = items[::-1]
     return render_template('seller_items.html', items=items)
 
 
