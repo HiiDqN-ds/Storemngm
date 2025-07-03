@@ -435,30 +435,59 @@ def delete_seller(username):
     flash('Seller deleted successfully', 'success')
     return redirect(url_for('list_sellers'))
 
-# Admin: List Items to Edit
+# Admin: List Items to Edit Barcode Generation
 @app.route('/admin/items')
 @login_required('admin')
 def list_items():
     items = load_json(ITEMS_FILE)
 
     for item in items:
-        # Normalize keys for template compatibility
-        item['product_name'] = item.get('product_name') or item.get('name')  # alias for display
-        item['barcode'] = item.get('barcode', '')
-        item['purchase_price'] = float(item.get('purchase_price', 0))
-        item['selling_price'] = float(item.get('selling_price', 0))
-        item['min_selling_price'] = float(item.get('min_selling_price', 0))
-        item['quantity'] = int(item.get('quantity', 0))
-        item['description'] = item.get('description', '')
-        item['photo_link'] = item.get('image_url', '')  # map to match your HTML
+        # Normalize product_name robustly
+        product_name = item.get('product_name')
+        if not product_name or not str(product_name).strip():
+            product_name = item.get('name', '').strip()
 
-    # Optional: sort alphabetically
+        if not product_name:
+            product_name = "Unnamed product"
+
+        item['product_name'] = product_name
+
+        # Normalize other fields safely
+        item['barcode'] = item.get('barcode', '')
+        item['purchase_price'] = float(item.get('purchase_price', 0) or 0)
+        item['selling_price'] = float(item.get('selling_price', 0) or 0)
+        item['min_selling_price'] = float(item.get('min_selling_price', 0) or 0)
+        item['quantity'] = int(item.get('quantity', 0) or 0)
+        item['description'] = item.get('description', '')
+        item['photo_link'] = item.get('image_url', '')
+
+    # Sort items alphabetically by product_name (case-insensitive)
     items.sort(key=lambda x: x['product_name'].lower())
-    items = items[::-1] 
+    items = items[::-1]  # reverse to show descending order if you want
+
     return render_template('items.html', items=items)
 
+# Admin: List Items to Edit
+import io
+from flask import send_file
+import barcode
+from barcode.writer import ImageWriter
 
+@app.route('/admin/items/barcode_print/<barcode_value>')
+@login_required('admin')
+def barcode_print(barcode_value):
+    CODE128 = barcode.get_barcode_class('code128')
+    img_io = io.BytesIO()
 
+    code = CODE128(barcode_value, writer=ImageWriter())
+    code.write(img_io)
+    img_io.seek(0)
+
+    return send_file(
+        img_io,
+        mimetype='image/png',
+        as_attachment=False  # open inline
+    )
 # Admin: List selled Items
 @app.route('/admin/sales')
 @login_required('admin')
@@ -502,25 +531,45 @@ def add_item():
 
 
 
+
 # Admin: Edit Item
-@app.route('/admin/items/edit/<barcode>', methods=['GET','POST'])
+@app.route('/admin/items/edit/<barcode>', methods=['GET', 'POST'])
 @login_required('admin')
 def edit_item(barcode):
-    items = load_items()
-    item = next((i for i in items if i['barcode'] == barcode), None)
+    items = load_json(ITEMS_FILE)
+
+    # Find the item by barcode (or other unique id)
+    item = next((i for i in items if i.get('barcode') == barcode), None)
     if not item:
-        flash('Item not found', 'danger')
+        flash("Artikel nicht gefunden.", "danger")
         return redirect(url_for('list_items'))
 
     if request.method == 'POST':
-        item['name'] = request.form['name']
-        item['price'] = float(request.form['price'])
-        item['quantity'] = int(request.form['quantity'])
-        item['photo_link'] = request.form.get('photo_link','')
-        save_items(items)
-        flash('Item updated', 'success')
+        # Check if barcode should be updated
+        if 'edit_barcode' in request.form:
+            new_barcode = request.form.get('barcode').strip()
+            if new_barcode and new_barcode != item.get('barcode'):
+                # Optionally: check if new_barcode is unique here
+                item['barcode'] = new_barcode
+        else:
+            # Keep old barcode
+            item['barcode'] = request.form.get('old_barcode')
+
+        # Update other fields safely
+        item['product_name'] = request.form.get('name', '').strip()
+        item['purchase_price'] = float(request.form.get('purchase_price', 0))
+        item['selling_price'] = float(request.form.get('selling_price', 0))
+        item['min_selling_price'] = float(request.form.get('min_selling_price', 0))
+        item['quantity'] = int(request.form.get('quantity', 0))
+        item['description'] = request.form.get('description', '').strip()
+        item['photo_link'] = request.form.get('photo_link', '').strip()
+
+        # Save the updated items list back to JSON
+        save_json(ITEMS_FILE, items)
+        flash("Artikel wurde erfolgreich aktualisiert.", "success")
         return redirect(url_for('list_items'))
 
+    # GET request: show form with item data
     return render_template('edit_item.html', item=item)
 
 # Admin: Delete Item
@@ -719,6 +768,7 @@ def seller_sales():
         flash("Verkauf erfolgreich aktualisiert.", "success")
         return redirect(url_for('seller_sales'))
 
+    user_sales = user_sales[::-1]
     return render_template('seller_sales.html', sales=user_sales)
 
 

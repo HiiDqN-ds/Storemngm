@@ -1,1 +1,47 @@
-[]
+[
+    {
+        "seller": "user",
+        "barcode": "dg54844j8zh4u67",
+        "name": "hamza sassidfg",
+        "quantity": 1,
+        "sale_price": 456456.0,
+        "total_price": 456456.0,
+        "date": "2025-07-03T20:24:58.566079"
+    },
+    {
+        "seller": "user",
+        "barcode": "1236547893214",
+        "name": "hamza sassi",
+        "quantity": 1,
+        "sale_price": 15000.0,
+        "total_price": 15000.0,
+        "date": "2025-07-03T20:36:38.427116"
+    },
+    {
+        "seller": "user",
+        "barcode": "xe10kolllg",
+        "name": "Produkt B",
+        "quantity": 1,
+        "sale_price": 15.0,
+        "total_price": 15.0,
+        "date": "2025-07-03T20:36:38.427204"
+    },
+    {
+        "seller": "user",
+        "barcode": "xe10kolllg",
+        "name": "Produkt B",
+        "quantity": 1,
+        "sale_price": 15.0,
+        "total_price": 15.0,
+        "date": "2025-07-03T20:37:17.624164"
+    },
+    {
+        "seller": "user",
+        "barcode": "111111",
+        "name": "Produkt A",
+        "quantity": 1,
+        "sale_price": 1.0,
+        "total_price": 1.0,
+        "date": "2025-07-03T20:37:17.624208"
+    }
+]
