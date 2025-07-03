@@ -1009,7 +1009,7 @@ def seller_items():
     username = session['username']
     items = load_items_for_seller(username)
     items = normalize_items(items)  # Ensure all items have 'name'
-    items = orders[::-1]
+    items = items[::-1]
     return render_template('seller_items.html', items=items)
 
 
