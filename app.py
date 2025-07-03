@@ -986,6 +986,7 @@ def normalize_items(items):
         item['description'] = item.get('description', '')
         item['photo_link'] = item.get('photo_link') or item.get('image_url', '')
     return items
+
 def load_items():
     items = load_json(ITEMS_FILE)
     return normalize_items(items)

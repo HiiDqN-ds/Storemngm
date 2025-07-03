@@ -1,17 +1,5 @@
 [
-  {
-    "order_number": "917900387900",
-    "product_name": "galaxy A26",
-    "ref_number": "Handy",
-    "description": "",
-    "price": 50.0,
-    "quantity": 1,
-    "total_price": 50.0,
-    "date": "2025-07-03",
-    "user": "admin",
-    "barcode": "barcodes/code_barres_917900387900"
-  },
-  {
+    {
     "order_number": "770611424222",
     "product_name": "qqqqqqqqqqq",
     "ref_number": "dsfsdf",
