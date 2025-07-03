@@ -861,6 +861,13 @@ def order():
             return redirect(url_for('order'))
 
         total_price = round(price * quantity, 2)
+        print("📦 DEBUGGING ORDER ENTRY")
+        print("Product name:", product_name)
+        print("Price:", price)
+        print("Quantity:", quantity)
+        print("→ Calculated total_price:", total_price)
+
+        
         today = datetime.now().strftime('%Y-%m-%d')
         username = session.get('username', 'unbekannt')
 

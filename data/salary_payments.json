@@ -1,3 +1,9 @@
 [
-
+  {
+    "employee": "admin",
+    "amount": 1200.0,
+    "source": "Kasse",
+    "note": "",
+    "date": "2025-07-04 00:52"
+  }
 ]

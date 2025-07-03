@@ -4,10 +4,11 @@
 
 {% block content %}
 <h2>All Sales History</h2>
+
 <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 
-<table class="table table-bordered">
-  <thead>
+<table class="table table-bordered align-middle">
+  <thead class="table-light">
     <tr>
       <th>Seller</th>
       <th>Item Barcode</th>
@@ -25,14 +26,26 @@
       <td>{{ sale['quantity'] }}</td>
       <td>{{ "%.2f"|format(sale['sale_price']) }}</td>
       <td>{{ sale['date'] }}</td>
-      <td>
+      <td class="d-flex gap-1 flex-wrap">
 
-        <button onclick='showReceiptInPopup({{ sale | tojson | safe }})' class="btn btn-sm btn-primary">Quittung</button>
-        <a href="{{ url_for('edit_sale', index=loop.index0) }}" class="btn btn-sm btn-warning">Bearbeiten</a>
-        <form method="post" action="{{ url_for('delete_sale', index=loop.index0) }}" style="display:inline;" onsubmit="return confirm('Verkauf wirklich löschen?')">
-          <button type="submit" class="btn btn-sm btn-danger">Löschen</button>
-      </form>
-    </td>
+        <!-- Receipt Button -->
+        <button onclick='showReceiptInPopup({{ sale | tojson | safe }})' class="btn btn-sm btn-info" title="Quittung anzeigen">
+          <i class="bi bi-receipt"></i>
+        </button>
+
+        <!-- Edit Button -->
+        <a href="{{ url_for('edit_sale', index=loop.index0) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
+          <i class="bi bi-pencil-square"></i>
+        </a>
+
+        <!-- Delete Button -->
+        <form method="post" action="{{ url_for('delete_sale', index=loop.index0) }}" onsubmit="return confirm('Verkauf wirklich löschen?')">
+          <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
+            <i class="bi bi-trash"></i>
+          </button>
+        </form>
+
+      </td>
     </tr>
     {% else %}
     <tr><td colspan="6">No sales found.</td></tr>
@@ -40,7 +53,7 @@
   </tbody>
 </table>
 
-<!-- JS logic to open receipt in new window -->
+<!-- html2pdf for receipt -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
@@ -65,8 +78,7 @@
           button { margin-top: 10px; padding: 6px 10px; }
         </style>
       </head>
-      <body>
-        <body onload="window.print()">
+      <body onload="window.print()">
         <div class="header">
           <img src="${logoUrl}" alt="Logo">
           <div>
@@ -111,33 +123,16 @@
     win.focus();
   }
 
+  function filterTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
 
-function filterTable() {
-  const input = document.getElementById("searchInput");
-  const filter = input.value.toLowerCase();
-  const rows = document.querySelectorAll("table tbody tr");
-
-  rows.forEach(row => {
-    const productName = row.cells[0].textContent.toLowerCase();
-    const barcode = row.cells[1].textContent.toLowerCase();
-    row.style.display = productName.includes(filter) || barcode.includes(filter) ? "" : "none";
-  });
-}
-
-
-
-function filterTable() {
-  const input = document.getElementById("searchInput");
-  const filter = input.value.toLowerCase();
-  const rows = document.querySelectorAll("table tbody tr");
-
-  rows.forEach(row => {
-    const productName = row.cells[0].textContent.toLowerCase();
-    const barcode = row.cells[1].textContent.toLowerCase();
-    row.style.display = productName.includes(filter) || barcode.includes(filter) ? "" : "none";
-  });
-}
+    rows.forEach(row => {
+      const seller = row.cells[0].textContent.toLowerCase();
+      const barcode = row.cells[1].textContent.toLowerCase();
+      row.style.display = seller.includes(filter) || barcode.includes(filter) ? "" : "none";
+    });
+  }
 </script>
-
-
 {% endblock %}

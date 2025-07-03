@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Items{% endblock %}
+
 {% block content %}
 <h2>Items</h2>
-<a href="{{ url_for('add_item') }}" class="btn btn-primary mb-3">Add New Item</a>
+<a href="{{ url_for('add_item') }}" class="btn btn-primary mb-3">
+  <i class="bi bi-plus-circle me-1"></i> Add New Item
+</a>
+
 <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 
-<table class="table table-bordered">
-  <thead>
+<table class="table table-bordered align-middle">
+  <thead class="table-light">
     <tr>
       <th>Produktname</th>
       <th>Barcode</th>
@@ -33,28 +37,33 @@
         {% if item.photo_link %}
           <img src="{{ item.photo_link }}" width="50" alt="Product photo">
         {% else %}
-          No Image
+          <span class="text-muted">No Image</span>
         {% endif %}
       </td>
-      <td>
-        <a href="{{ url_for('edit_item', barcode=item.barcode) }}" class="btn btn-sm btn-warning">Edit</a>
-        
-        <form method="POST" action="{{ url_for('delete_item', barcode=item.barcode) }}" style="display:inline" onsubmit="return confirm('Delete this item?');">
-          <button class="btn btn-sm btn-danger">Delete</button>
+      <td class="d-flex gap-1 flex-wrap">
+
+        <!-- Edit Button -->
+        <a href="{{ url_for('edit_item', barcode=item.barcode) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
+          <i class="bi bi-pencil-square"></i>
+        </a>
+
+        <!-- Delete Button -->
+        <form method="POST" action="{{ url_for('delete_item', barcode=item.barcode) }}" onsubmit="return confirm('Delete this item?');">
+          <button class="btn btn-sm btn-danger" title="Löschen">
+            <i class="bi bi-trash"></i>
+          </button>
         </form>
 
+        <!-- Print Barcode Button -->
         <a 
           href="{{ url_for('barcode_print', barcode_value=item.barcode) }}" 
           class="btn btn-sm btn-outline-primary" 
           target="_blank" 
           title="Code drucken"
-          style="width: 36px; height: 36px; padding: 6px; display: inline-flex; align-items: center; justify-content: center;"
         >
-          <!-- Bootstrap barcode icon SVG -->
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-upc" viewBox="0 0 16 16">
-            <path d="M1.5 1.5v13h1v-13h-1zm2 0v13h1v-13h-1zm2 0v13h1v-13h-1zm2 0v13h1v-13h-1zm2 0v13h1v-13h-1zm2 0v13h1v-13h-1zm2 0v13h1v-13h-1z"/>
-          </svg>
+          <i class="bi bi-upc"></i>
         </a>
+
       </td>
     </tr>
     {% else %}
@@ -62,6 +71,7 @@
     {% endfor %}
   </tbody>
 </table>
+
 <script>
 function filterTable() {
   const input = document.getElementById("searchInput");
