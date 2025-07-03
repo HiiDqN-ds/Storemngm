@@ -1,14 +1,14 @@
 [
   {
-    "order_number": "340969359497",
-    "product_name": "charger",
-    "ref_number": "iphon",
+    "order_number": "917900387900",
+    "product_name": "galaxy A26",
+    "ref_number": "Handy",
     "description": "",
-    "price": 10.0,
+    "price": 50.0,
     "quantity": 1,
-    "total_price": 10.0,
+    "total_price": 50.0,
     "date": "2025-07-03",
     "user": "admin",
-    "barcode": "barcodes/code_barres_340969359497"
+    "barcode": "barcodes/code_barres_917900387900"
   }
 ]

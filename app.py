@@ -659,7 +659,7 @@ def edit_sale(index):
 
 
 
-# Seller Dashboard - Sell Items Route
+# Seller Dashboard
 @app.route('/sell', methods=['GET', 'POST'])
 def sell_item():
     # Access control: only admin or seller can sell
@@ -670,14 +670,14 @@ def sell_item():
     items = load_items()
 
     if request.method == 'POST':
-        # Extract all form indices like items[0], items[1], ...
+        # Get all form indices: items[0][barcode], items[1][quantity], etc.
         indices = {
             key.split('[')[1].split(']')[0]
             for key in request.form if key.startswith('items[')
         }
         indices = sorted(indices, key=int)
 
-        sales = load_sales()  # Load sales once before processing all items
+        sales = load_sales()  # Load once before loop
 
         for idx in indices:
             barcode = request.form.get(f'items[{idx}][barcode]', '').strip()
@@ -685,18 +685,18 @@ def sell_item():
             discount_active = request.form.get(f'items[{idx}][discount_active]')
             price_input = request.form.get(f'items[{idx}][price]', '').strip()
 
-            # Validate barcode selection
+            # Validate barcode
             if not barcode:
-                flash(f"❌ Bitte wählen Sie für Produkt {int(idx) + 1} ein Produkt aus.", 'danger')
+                flash(f"❌ Bitte wählen Sie für Produkt {int(idx)+1} ein Produkt aus.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Find the item by barcode
+            # Find the item in stock
             item = next((i for i in items if i.get('barcode') == barcode), None)
             if not item:
                 flash(f"❌ Produkt mit Barcode {barcode} nicht gefunden.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Validate quantity as positive integer
+            # Validate quantity
             try:
                 quantity = int(quantity_raw)
                 if quantity <= 0:
@@ -705,12 +705,11 @@ def sell_item():
                 flash(f"❌ Ungültige Menge für Produkt {item.get('name', 'Produkt')}.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Check stock availability
             if quantity > item.get('quantity', 0):
                 flash(f"❌ Nicht genug Bestand für Produkt {item.get('name', 'Produkt')}. Nur noch {item.get('quantity', 0)} verfügbar.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Determine sale price (custom discount or default selling price)
+            # Get sale price
             if discount_active:
                 try:
                     sale_price = float(price_input)
@@ -728,46 +727,38 @@ def sell_item():
                     flash(f"❌ Das Produkt {item.get('name', 'Produkt')} hat einen ungültigen Preis.", 'danger')
                     return redirect(url_for('sell_item'))
 
-            # Deduct sold quantity from stock
+            # Reduce stock
             item['quantity'] -= quantity
-
-            # Get purchase price from item to calculate profit later
             purchase_price = item.get('purchase_price', 0)
-
-            # Prepare sale record to append
-            sale_record = {
-                'seller': session['username'],
-                'barcode': barcode,
-                'name': item.get('product_name') or item.get('name') or 'Unbenannt',
-                'quantity': quantity,
-                'sale_price': sale_price,
-                'purchase_price': purchase_price,
-                'total_price': round(sale_price * quantity, 2),
-                'date': datetime.now().isoformat()
-            }
-
-            sales.append(sale_record)
+            # Append sale with item name
+            sales.append({
+            'seller': session['username'],
+            'barcode': barcode,
+            'name': item.get('product_name') or item.get('name') or 'Unbenannt',
+            'quantity': quantity,
+            'sale_price': sale_price,
+            'purchase_price': purchase_price,
+            'total_price': round(sale_price * quantity, 2),
+            'date': datetime.now().isoformat()
+        })
 
             product_name = item.get("product_name") or item.get("name") or "Produkt"
             flash(f'✅ Verkauf von {quantity} × {product_name} erfolgreich.', 'success')
 
-            # Warn if stock is low after sale
-            if item.get('quantity', 0) <= 5:
-                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {product_name} auf Lager!', 'warning')
 
-        # Save updated sales and items only once after processing all sold items
+            # Low stock warning
+            if item.get('quantity', 0) <= 5:
+                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {item.get("name", "Produkt")} auf Lager!', 'warning')
+
+        # Save everything once
         save_sales(sales)
         save_items(items)
 
-        # Redirect to admin or seller dashboard based on user role
+        # Redirect to appropriate dashboard
         if session.get('role') == 'admin':
             return redirect(url_for('admin_dashboard'))
         else:
             return redirect(url_for('seller_dashboard'))
-
-    # GET request: just render the selling page with available items
-    return render_template('sell_item.html', items=items)
-
 
     # GET: render form
     return render_template('sell_item.html', items=items)

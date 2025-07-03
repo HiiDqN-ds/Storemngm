@@ -16,7 +16,7 @@
     "purchase_price": 5.0,
     "selling_price": 6.0,
     "min_selling_price": 5.5,
-    "quantity": 0,
+    "quantity": 1,
     "photo_link": "",
     "description": "werwer",
     "seller": "admin"
@@ -28,6 +28,17 @@
     "selling_price": 12.0,
     "min_selling_price": 11.0,
     "quantity": 1,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin"
+  },
+  {
+    "product_name": "produkt B",
+    "barcode": "805364187661",
+    "purchase_price": 4515.0,
+    "selling_price": 5418.0,
+    "min_selling_price": 4966.5,
+    "quantity": 455,
     "photo_link": "",
     "description": "",
     "seller": "admin"
