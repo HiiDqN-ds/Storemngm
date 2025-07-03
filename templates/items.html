@@ -3,6 +3,7 @@
 {% block content %}
 <h2>Items</h2>
 <a href="{{ url_for('add_item') }}" class="btn btn-primary mb-3">Add New Item</a>
+<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 
 <table class="table table-bordered">
   <thead>
@@ -61,4 +62,17 @@
     {% endfor %}
   </tbody>
 </table>
+<script>
+function filterTable() {
+  const input = document.getElementById("searchInput");
+  const filter = input.value.toLowerCase();
+  const rows = document.querySelectorAll("table tbody tr");
+
+  rows.forEach(row => {
+    const productName = row.cells[0].textContent.toLowerCase();
+    const barcode = row.cells[1].textContent.toLowerCase();
+    row.style.display = productName.includes(filter) || barcode.includes(filter) ? "" : "none";
+  });
+}
+</script>
 {% endblock %}

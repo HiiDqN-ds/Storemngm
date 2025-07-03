@@ -39,7 +39,7 @@
     {% for item in items %}
     {
       barcode: "{{ item.barcode }}",
-      name: "{{ item.name | escape }}",
+      name: "{{ item.product_name | escape }}",
       price: {{ item.selling_price | default(0) }},
       quantity: {{ item.quantity | default(0) }},
       img: "{{ item.photo_link | default('') }}"

@@ -144,53 +144,68 @@ def datetimeformat(value, format='%d.%m.%Y'):
 from flask import session
 from datetime import datetime
 
+
+def calculate_all_time_profit(sales, items):
+    barcode_map = {item['barcode']: item.get('purchase_price', 0) for item in items}
+    profit = 0.0
+    for s in sales:
+        barcode = s.get('barcode')
+        purchase_price = barcode_map.get(barcode, 0)
+        sale_price = s.get('sale_price', 0)
+        quantity = s.get('quantity', 0)
+        profit += (sale_price - purchase_price) * quantity
+    return round(profit, 2)
+
 # Admin Dashboard
 @app.route('/admin')
 @login_required('admin')
 def admin_dashboard():
     sales = load_sales()          # Load sales JSON data
     purchases = load_purchases()  # Load purchases JSON data
+    items = load_items()          # Load item data (needed for purchase prices)
 
     now = datetime.now()
     today = now.date()
 
-    # Parse sales dates (string -> datetime)
+    # Parse sale dates (string -> datetime)
     for sale in sales:
         if isinstance(sale.get('date'), str):
-            sale['date'] = datetime.fromisoformat(sale['date'])
+            try:
+                sale['date'] = datetime.fromisoformat(sale['date'])
+            except ValueError:
+                sale['date'] = datetime.min
 
-    # Parse purchase dates (string -> datetime) or default to datetime.min if missing
+    # Parse purchase dates (string -> datetime)
     for purchase in purchases:
-        if 'date' in purchase and isinstance(purchase['date'], str):
-            purchase['date'] = datetime.fromisoformat(purchase['date'])
-        else:
-            purchase['date'] = datetime.min
+        if isinstance(purchase.get('date'), str):
+            try:
+                purchase['date'] = datetime.fromisoformat(purchase['date'])
+            except ValueError:
+                purchase['date'] = datetime.min
 
-    # Calculate daily profit from sales on 'today'
+    # Daily profit (today's sales total)
     daily_profit = sum(
         s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
         for s in sales
         if s['date'].date() == today
     )
 
-    # Calculate monthly profit (sales total for current month)
+    # Monthly profit = (monthly sales - monthly purchases)
     monthly_sales = sum(
         s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
         for s in sales
         if s['date'].year == now.year and s['date'].month == now.month
     )
 
-    # Calculate monthly purchases total for current month
     monthly_purchases = sum(
         p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
         for p in purchases
         if p['date'].year == now.year and p['date'].month == now.month
     )
 
-    # Monthly profit = sales - purchases for current month
     monthly_profit = monthly_sales - monthly_purchases
 
-    # Total sales and total purchases overall
+    # Total sales and purchases (all time)
     total_sales = sum(
         s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
         for s in sales
@@ -200,18 +215,35 @@ def admin_dashboard():
         for p in purchases
     )
 
-    # Wallet balance - get from session or calculate as total sales - total purchases
+    # Calculate all-time profit = total of (sale price - purchase price) * quantity
+    barcode_to_purchase_price = {
+        item['barcode']: item.get('purchase_price', 0) for item in items
+    }
+
+    all_time_profit = 0.0
+    for s in sales:
+        barcode = s.get('barcode')
+        quantity = s.get('quantity', 0)
+        sale_price = s.get('sale_price', 0)
+        purchase_price = barcode_to_purchase_price.get(barcode, 0)
+        profit = (sale_price - purchase_price) * quantity
+        all_time_profit += profit
+
+    all_time_profit = round(all_time_profit, 2)
+
+    # Wallet balance = session or fallback to calculated
     wallet_balance = session.get('wallet_balance', total_sales - total_purchases)
 
-    # Sort sales and purchases by date descending for display
+    # Sort by date for display
     sales_sorted = sorted(sales, key=lambda x: x['date'], reverse=True)
     purchases_sorted = sorted(purchases, key=lambda x: x['date'], reverse=True)
 
     return render_template(
         "admin_dashboard.html",
         daily_profit=daily_profit,
-        wallet_balance=wallet_balance,
         monthly_profit=monthly_profit,
+        wallet_balance=wallet_balance,
+        all_time_profit=all_time_profit,
         sales=sales_sorted,
         purchases=purchases_sorted
     )
@@ -482,7 +514,7 @@ def barcode_print(barcode_value):
     code = CODE128(barcode_value, writer=ImageWriter())
     code.write(img_io)
     img_io.seek(0)
-
+    
     return send_file(
         img_io,
         mimetype='image/png',
@@ -498,7 +530,12 @@ def admin_sales():
 
     # Optional: enrich sales with item name and seller name for better display
     for sale in sales:
-        sale['item_name'] = next((i['name'] for i in items if i['barcode'] == sale['barcode']), 'Unknown Item')
+        sale['item_name'] = next((
+        i.get('product_name') or i.get('name') or 'Unnamed'
+        for i in items
+        if i.get('barcode') == sale.get('barcode')
+    ), 'Unknown Item')
+
         sale['seller_name'] = sale.get('seller', 'Unknown')
     sales = sales[::-1]
     return render_template('admin_sales.html', sales=sales)
@@ -622,7 +659,7 @@ def edit_sale(index):
 
 
 
-# Seller Dashboard
+# Seller Dashboard - Sell Items Route
 @app.route('/sell', methods=['GET', 'POST'])
 def sell_item():
     # Access control: only admin or seller can sell
@@ -633,14 +670,14 @@ def sell_item():
     items = load_items()
 
     if request.method == 'POST':
-        # Get all form indices: items[0][barcode], items[1][quantity], etc.
+        # Extract all form indices like items[0], items[1], ...
         indices = {
             key.split('[')[1].split(']')[0]
             for key in request.form if key.startswith('items[')
         }
         indices = sorted(indices, key=int)
 
-        sales = load_sales()  # Load once before loop
+        sales = load_sales()  # Load sales once before processing all items
 
         for idx in indices:
             barcode = request.form.get(f'items[{idx}][barcode]', '').strip()
@@ -648,18 +685,18 @@ def sell_item():
             discount_active = request.form.get(f'items[{idx}][discount_active]')
             price_input = request.form.get(f'items[{idx}][price]', '').strip()
 
-            # Validate barcode
+            # Validate barcode selection
             if not barcode:
-                flash(f"❌ Bitte wählen Sie für Produkt {int(idx)+1} ein Produkt aus.", 'danger')
+                flash(f"❌ Bitte wählen Sie für Produkt {int(idx) + 1} ein Produkt aus.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Find the item in stock
+            # Find the item by barcode
             item = next((i for i in items if i.get('barcode') == barcode), None)
             if not item:
                 flash(f"❌ Produkt mit Barcode {barcode} nicht gefunden.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Validate quantity
+            # Validate quantity as positive integer
             try:
                 quantity = int(quantity_raw)
                 if quantity <= 0:
@@ -668,11 +705,12 @@ def sell_item():
                 flash(f"❌ Ungültige Menge für Produkt {item.get('name', 'Produkt')}.", 'danger')
                 return redirect(url_for('sell_item'))
 
+            # Check stock availability
             if quantity > item.get('quantity', 0):
                 flash(f"❌ Nicht genug Bestand für Produkt {item.get('name', 'Produkt')}. Nur noch {item.get('quantity', 0)} verfügbar.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Get sale price
+            # Determine sale price (custom discount or default selling price)
             if discount_active:
                 try:
                     sale_price = float(price_input)
@@ -690,35 +728,46 @@ def sell_item():
                     flash(f"❌ Das Produkt {item.get('name', 'Produkt')} hat einen ungültigen Preis.", 'danger')
                     return redirect(url_for('sell_item'))
 
-            # Reduce stock
+            # Deduct sold quantity from stock
             item['quantity'] -= quantity
 
-            # Append sale with item name
-            sales.append({
+            # Get purchase price from item to calculate profit later
+            purchase_price = item.get('purchase_price', 0)
+
+            # Prepare sale record to append
+            sale_record = {
                 'seller': session['username'],
                 'barcode': barcode,
-                'name': item.get('name', ''),
+                'name': item.get('product_name') or item.get('name') or 'Unbenannt',
                 'quantity': quantity,
                 'sale_price': sale_price,
+                'purchase_price': purchase_price,
                 'total_price': round(sale_price * quantity, 2),
                 'date': datetime.now().isoformat()
-            })
+            }
 
-            flash(f'✅ Verkauf von {quantity} × {item.get("name", "Produkt")} erfolgreich.', 'success')
+            sales.append(sale_record)
 
-            # Low stock warning
+            product_name = item.get("product_name") or item.get("name") or "Produkt"
+            flash(f'✅ Verkauf von {quantity} × {product_name} erfolgreich.', 'success')
+
+            # Warn if stock is low after sale
             if item.get('quantity', 0) <= 5:
-                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {item.get("name", "Produkt")} auf Lager!', 'warning')
+                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {product_name} auf Lager!', 'warning')
 
-        # Save everything once
+        # Save updated sales and items only once after processing all sold items
         save_sales(sales)
         save_items(items)
 
-        # Redirect to appropriate dashboard
+        # Redirect to admin or seller dashboard based on user role
         if session.get('role') == 'admin':
             return redirect(url_for('admin_dashboard'))
         else:
             return redirect(url_for('seller_dashboard'))
+
+    # GET request: just render the selling page with available items
+    return render_template('sell_item.html', items=items)
+
 
     # GET: render form
     return render_template('sell_item.html', items=items)
