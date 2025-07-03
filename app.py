@@ -495,8 +495,15 @@ def list_items():
 
     # Sort items alphabetically by product_name (case-insensitive)
     items.sort(key=lambda x: x['product_name'].lower())
-    items = items[::-1]  # reverse to show descending order if you want
+    # reverse to show descending order if you want
+    
+    for item in items:
+        try:
+            item['date_obj'] = datetime.fromisoformat(item.get('date', '1900-01-01'))
+        except ValueError:
+            item['date_obj'] = datetime.min
 
+    items = sorted(items, key=lambda x: x['date_obj'], reverse=True)
     return render_template('items.html', items=items)
 
 # Admin: List Items to Edit
@@ -867,7 +874,7 @@ def order():
         print("Quantity:", quantity)
         print("→ Calculated total_price:", total_price)
 
-        
+
         today = datetime.now().strftime('%Y-%m-%d')
         username = session.get('username', 'unbekannt')
 

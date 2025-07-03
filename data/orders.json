@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "order_number": "831926988830",
+    "product_name": "b aha",
+    "ref_number": "b ahab aha",
+    "description": "b ahab aha",
+    "price": 250.0,
+    "quantity": 50,
+    "total_price": 12500.0,
+    "date": "2025-07-04",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_831926988830"
+  }
+]

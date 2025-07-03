@@ -61,5 +61,16 @@
     "photo_link": "",
     "description": "handyhandyhandy",
     "seller": "admin"
+  },
+  {
+    "product_name": "b aha",
+    "barcode": "831926988830",
+    "purchase_price": 250.0,
+    "selling_price": 300.0,
+    "min_selling_price": 275.0,
+    "quantity": 50,
+    "photo_link": "",
+    "description": "b ahab aha",
+    "seller": "admin"
   }
 ]
