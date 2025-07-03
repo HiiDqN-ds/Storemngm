@@ -4,6 +4,7 @@
 {% block content %}
 <div class="table-responsive">
   <h2>Meine Verkäufe</h2>
+  <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
   <form method="get" class="mb-3 d-flex gap-2 align-items-end">
     <div>
       <label for="date">Datum:</label>
@@ -124,6 +125,19 @@
       alert("Pop-up Fenster blockiert. Bitte erlauben Sie Pop-ups für diese Seite.");
     }
   }
+
+  function filterTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toLowerCase();
+    const rows = document.querySelectorAll("table tbody tr");
+
+    rows.forEach(row => {
+      const productName = row.cells[0].textContent.toLowerCase();
+      const barcode = row.cells[1].textContent.toLowerCase();
+      row.style.display = productName.includes(filter) || barcode.includes(filter) ? "" : "none";
+    });
+  }
+
 </script>
 
 {% endblock %}
