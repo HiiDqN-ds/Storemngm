@@ -1,16 +1,16 @@
 [
   {
-    "date": "2025-07-04T18:09:37.281145",
-    "amount": 50.0,
-    "type": "einzahlung",
-    "description": "min  jibti",
-    "user": "admin"
-  },
-  {
     "date": "2025-07-04T18:09:44.812110",
     "amount": -60.0,
     "type": "auszahlung",
     "description": "dcvfsdfg",
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-04T18:34:33.754147",
+    "amount": 565.0,
+    "type": "einzahlung",
+    "description": "12",
     "user": "admin"
   }
 ]

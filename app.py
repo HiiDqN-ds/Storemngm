@@ -66,17 +66,18 @@ def find_user(username):
         if user['username'] == username:
             return user
     return None
-
-# Decorators for login required
 from functools import wraps
-def login_required(role=None):
+def login_required(roles=None):
+    if not isinstance(roles, (list, tuple)):
+        roles = [roles] if roles else []
+
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             if 'username' not in session:
                 flash('Please login first', 'warning')
                 return redirect(url_for('login'))
-            if role and session.get('role') != role:
+            if roles and session.get('role') not in roles:
                 flash('Unauthorized access', 'danger')
                 return redirect(url_for('login'))
             return f(*args, **kwargs)
@@ -1247,11 +1248,12 @@ def list_salary_payments():
 
 
 @app.route('/kasse', methods=['GET', 'POST'])
-@login_required('admin')
+@login_required(['admin', 'seller'])
 def kasse():
     kasse_file = os.path.join('data', 'kasse.json')
     transactions = []
 
+    # Load existing transactions
     if os.path.exists(kasse_file):
         with open(kasse_file, 'r', encoding='utf-8') as f:
             try:
@@ -1259,7 +1261,23 @@ def kasse():
             except json.JSONDecodeError:
                 transactions = []
 
+    # Handle add or delete
     if request.method == 'POST':
+        if 'delete_index' in request.form and session.get('role') == 'admin':
+            try:
+                delete_index = int(request.form['delete_index'])
+                if 0 <= delete_index < len(transactions):
+                    deleted = transactions.pop(delete_index)
+                    with open(kasse_file, 'w', encoding='utf-8') as f:
+                        json.dump(transactions, f, indent=2, ensure_ascii=False)
+                    flash(f"Eintrag gelöscht: {deleted.get('description', '')}", "success")
+                else:
+                    flash("Ungültiger Index", "danger")
+            except Exception as e:
+                flash(f"Fehler beim Löschen: {e}", "danger")
+            return redirect(url_for('kasse'))
+
+        # Normal addition
         try:
             amount = float(request.form['betrag'])
             description = request.form.get('beschreibung', '').strip()
@@ -1268,7 +1286,7 @@ def kasse():
                 raise ValueError("Ungültiger Typ")
 
             if ktype == 'auszahlung':
-                amount = -abs(amount)  # make it negative
+                amount = -abs(amount)
 
             transaction = {
                 "date": datetime.now().isoformat(),
@@ -1289,7 +1307,8 @@ def kasse():
         except Exception as e:
             flash(f"Fehler: {e}", "danger")
 
-    return render_template("kasse.html", transactions=reversed(transactions))  # newest first
+    return render_template("kasse.html", transactions=reversed(transactions), role=session.get('role'))
+
 
 
 

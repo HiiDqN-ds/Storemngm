@@ -9,5 +9,17 @@
     "change_type": "manual",
     "amount": 1900.0,
     "user": "admin"
+  },
+  {
+    "date": "2025-07-04T18:36:31.008582",
+    "change_type": "manual",
+    "amount": 0.0,
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-04T18:37:54.388799",
+    "change_type": "manual",
+    "amount": 0.0,
+    "user": "admin"
   }
 ]

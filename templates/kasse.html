@@ -27,6 +27,14 @@
         <td style="color: {{ 'green' if t.amount > 0 else 'red' }}">€{{ "{:.2f}".format(t.amount) }}</td>
         <td>{{ t.description }}</td>
         <td>{{ t.user }}</td>
+        {% if session.role == 'admin' %}
+        <td>
+        <form method="post" onsubmit="return confirm('Diesen Eintrag wirklich löschen?');">
+            <input type="hidden" name="delete_index" value="{{ loop.index0 }}">
+            <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
+        </form>
+        </td>
+        {% endif %}
       </tr>
       {% else %}
       <tr><td colspan="5" class="text-center">Keine Einträge vorhanden.</td></tr>
