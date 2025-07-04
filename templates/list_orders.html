@@ -31,47 +31,50 @@
 <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 <div style="overflow-x: auto;">
       <table class="table table-bordered w-100">
-        <thead>
-          <tr>
-            <th>Produktname</th>
-            <th>Referenznummer</th>
-            <th>Beschreibung</th>
-            <th>Preis (€)</th>
-            <th>Menge</th>
-            <th>Gesamtpreis (€)</th>
-            <th>Datum</th>
-            <th>Benutzer</th>
-            <th>Barre Code</th>
-            <th>Aktionen</th>
-
-          </tr>
-        </thead>
-        
-        <tbody>
+<thead>
+  <tr>
+    <th>Produktname</th>
+    <th>Barcode</th>
+    <th>Purchase Price (€)</th>
+    <th>Selling Price (€)</th>
+    <th>Min Selling Price (€)</th>
+    <th>Menge</th>
+    <th>Einheitspreis (€)</th>
+    <th>Beschreibung</th>
+    <th>Gesamtpreis (€)</th>
+    <th>Photo</th>
+    <th>Datum</th>
+    <th>Benutzer</th>
+    <th>Aktionen</th>
+  </tr>
+</thead>
+<tbody>
   {% if orders %}
     {% for order in orders %}
     <tr>
-      <td>{{ order.product_name }}</td>
-      <td>{{ order.ref_number }}</td>
-      <td>{{ order.description }}</td>
-      <td>{{ order.price }}</td>
-      <td>{{ order.quantity }}</td>
-      <td>{{ order.total_price }}</td>
-      <td>{{ order.date }}</td>
-      <td>{{ order.user }}</td>
+      <td>{{ order.product_name | default('-') }}</td>
+      <td>{{ order.order_number | default('-') }}</td>
+      <td>{{ order.purchase_price | default(0) | round(2) }}</td>
+      <td>{{ order.selling_price | default(0) | round(2) }}</td>
+      <td>{{ order.min_selling_price | default(0) | round(2) }}</td>
+      <td>{{ order.quantity | default(0) }}</td>
+      <td>{{ order.price | default(0) | round(2) }}</td>
+      <td>{{ order.description | default('-') }}</td>
+      <td>{{ order.total_price | default(0) | round(2) }}</td>
       <td>
-        {% if order.barcode %}
-          <img src="{{ url_for('static', filename=order.barcode + '.png') }}" alt="Barcode" style="max-width: 120px;">
+        {% if order.photo_link %}
+          <img src="{{ url_for('static', filename=order.photo_link) }}" alt="Foto" style="max-height: 60px;">
         {% else %}
-          Kein Barcode
+          Kein Foto
         {% endif %}
       </td>
-      
+      <td>{{ order.date | default('-') }}</td>
+      <td>{{ order.user | default('-') }}</td>
       <td class="text-nowrap">
         <button class="btn btn-outline-primary btn-sm me-1" title="Quittung drucken" onclick="printReceipt({{ loop.index0 }})">
           <i class="bi bi-receipt me-1"></i>
         </button>
-        <button class="btn btn-outline-primary btn-sm me-1" title="Code drucken" onclick="printQRCode({{ loop.index0 }})">
+        <button class="btn btn-outline-primary btn-sm me-1" title="Barcode drucken" onclick="printQRCode({{ loop.index0 }})">
           <i class="bi bi-upc-scan"></i>
         </button>
         <a href="{{ url_for('edit_order', index=loop.index0) }}" class="btn btn-sm btn-warning me-1" title="Bearbeiten">
@@ -87,12 +90,13 @@
     {% endfor %}
   {% else %}
     <tr>
-      <td colspan="10" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
+      <td colspan="13" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
     </tr>
   {% endif %}
 </tbody>
 
-      </table>
+
+</table>
     </div>
 </div>
 

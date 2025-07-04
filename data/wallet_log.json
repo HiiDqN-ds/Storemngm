@@ -21,5 +21,11 @@
     "change_type": "manual",
     "amount": 0.0,
     "user": "admin"
+  },
+  {
+    "date": "2025-07-04T19:01:58.333293",
+    "change_type": "manual",
+    "amount": 0.0,
+    "user": "admin"
   }
 ]

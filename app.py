@@ -918,15 +918,21 @@ def pay_salary():
     return render_template('pay_salary.html', users=users)
 
 
-# Order Item
+from flask import request, session, flash, redirect, url_for, render_template
+import os
+import json
+import random
+from datetime import datetime
+from werkzeug.utils import secure_filename
+import barcode
+from barcode.writer import ImageWriter
+
 @app.route('/order', methods=['GET', 'POST'])
 def order():
     if session.get('role') not in ['admin', 'seller']:
         flash('Zugriff verweigert.', 'danger')
         return redirect(url_for('index'))
 
-    order_file = os.path.join('data', 'orders.json')
-    items_file = os.path.join('data', 'items.json')
     numero_unique = None
 
     if request.method == 'POST':
@@ -935,38 +941,36 @@ def order():
             ref_number = request.form.get('ref_number', '').strip()
             description = request.form.get('description', '').strip()
             price = float(request.form['price'])
+            selling_price = float(request.form['selling_price'])
+            min_selling_price = float(request.form['min_selling_price'])
             quantity = int(request.form['quantity'])
+
+            # Validate prices and quantity positive
+            if price < 0 or selling_price < 0 or min_selling_price < 0 or quantity < 1:
+                raise ValueError("Preise und Menge müssen positiv sein.")
         except (ValueError, KeyError) as e:
             flash('Ungültige Eingabe: ' + str(e), 'danger')
             return redirect(url_for('order'))
 
         total_price = round(price * quantity, 2)
-        print("📦 DEBUGGING ORDER ENTRY")
-        print("Product name:", product_name)
-        print("Price:", price)
-        print("Quantity:", quantity)
-        print("→ Calculated total_price:", total_price)
-
-
         today = datetime.now().strftime('%Y-%m-%d')
         username = session.get('username', 'unbekannt')
 
-        # Generate a unique 12-digit barcode number (ensure EAN13 valid length and checksum)
+        # Generate unique 12-digit barcode
         def generate_unique_barcode():
             while True:
                 code = ''.join(str(random.randint(0, 9)) for _ in range(12))
-                # Optional: Check if barcode already exists in orders or items for uniqueness
                 exists = False
-                if os.path.exists(order_file):
-                    with open(order_file, 'r', encoding='utf-8') as f:
+                if os.path.exists(ORDERS_FILE):
+                    with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
                         try:
                             orders = json.load(f)
                             if any(o.get('order_number') == code for o in orders):
                                 exists = True
                         except json.JSONDecodeError:
                             pass
-                if os.path.exists(items_file):
-                    with open(items_file, 'r', encoding='utf-8') as f:
+                if os.path.exists(ITEMS_FILE):
+                    with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
                         try:
                             items = json.load(f)
                             if any(i.get('barcode') == code for i in items):
@@ -986,36 +990,50 @@ def order():
         code = ean(numero_unique, writer=ImageWriter())
         code.save(barcode_path)
 
+        # Handle photo upload if present
+        photo_filename = ""
+        if 'photo' in request.files:
+            photo = request.files['photo']
+            if photo and allowed_file(photo.filename):
+                ext = photo.filename.rsplit('.', 1)[1].lower()
+                filename = f"{numero_unique}.{ext}"
+                secure_name = secure_filename(filename)
+                photo.save(os.path.join(UPLOAD_FOLDER, secure_name))
+                photo_filename = f"uploads/{secure_name}"
+
         new_order = {
             "order_number": numero_unique,
             "product_name": product_name,
             "ref_number": ref_number,
             "description": description,
             "price": price,
+            "selling_price": selling_price,
+            "min_selling_price": min_selling_price,
             "quantity": quantity,
             "total_price": total_price,
             "date": today,
             "user": username,
-            "barcode": f"barcodes/code_barres_{numero_unique}"
+            "barcode": f"barcodes/code_barres_{numero_unique}",
+            "photo": photo_filename
         }
 
-        # Load existing orders safely
+        # Load existing orders
         orders = []
-        if os.path.exists(order_file):
-            with open(order_file, 'r', encoding='utf-8') as f:
+        if os.path.exists(ORDERS_FILE):
+            with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
                 try:
                     orders = json.load(f)
                 except json.JSONDecodeError:
                     orders = []
 
         orders.append(new_order)
-        with open(order_file, 'w', encoding='utf-8') as f:
+        with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
             json.dump(orders, f, indent=2, ensure_ascii=False)
 
-        # Update inventory in items.json
+        # Update inventory items.json
         items = []
-        if os.path.exists(items_file):
-            with open(items_file, 'r', encoding='utf-8') as f:
+        if os.path.exists(ITEMS_FILE):
+            with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
                 try:
                     items = json.load(f)
                 except json.JSONDecodeError:
@@ -1023,10 +1041,14 @@ def order():
 
         found = False
         for item in items:
-            # match by product_name (you can also check barcode if you want)
-            if item.get('product_name') == product_name :
+            if item.get('product_name') == product_name:
                 item['quantity'] = item.get('quantity', 0) + quantity
-                # Optionally update prices or description here if needed
+                item['purchase_price'] = price
+                item['selling_price'] = selling_price
+                item['min_selling_price'] = min_selling_price
+                item['description'] = description
+                if photo_filename:
+                    item['photo_link'] = photo_filename
                 found = True
                 break
 
@@ -1035,23 +1057,22 @@ def order():
                 "product_name": product_name,
                 "barcode": numero_unique,
                 "purchase_price": price,
-                "selling_price": round(price * 1.2, 2),  # example markup
-                "min_selling_price": round(price * 1.1, 2),
+                "selling_price": selling_price,
+                "min_selling_price": min_selling_price,
                 "quantity": quantity,
-                "photo_link": "",
+                "photo_link": photo_filename,
                 "description": description,
                 "seller": username
             }
             items.append(new_item)
 
-        with open(items_file, 'w', encoding='utf-8') as f:
+        with open(ITEMS_FILE, 'w', encoding='utf-8') as f:
             json.dump(items, f, indent=2, ensure_ascii=False)
 
         flash('Bestellung erfolgreich aufgegeben und Inventar aktualisiert!', 'success')
         return redirect(url_for('list_orders'))
 
     return render_template('order_item.html', numero_unique=numero_unique)
-
 
 
 def load_items_for_seller(username):
@@ -1147,12 +1168,21 @@ def list_orders():
 
 # Orders CRUD
 # Edit Route
+# Edit Route
 @app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
 @login_required()
 def edit_order(index):
-    # Load orders using the defined path
+    if session.get('role') not in ['admin', 'seller']:
+        flash('Zugriff verweigert.', 'danger')
+        return redirect(url_for('index'))
+
+    # Load existing orders
     with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
-        orders = json.load(f)
+        try:
+            orders = json.load(f)
+        except json.JSONDecodeError:
+            flash("Fehler beim Laden der Bestellungen.", "danger")
+            return redirect(url_for('list_orders'))
 
     if index >= len(orders):
         flash('Bestellung nicht gefunden.', 'danger')
@@ -1162,18 +1192,29 @@ def edit_order(index):
 
     if request.method == 'POST':
         try:
-            order['product_name'] = request.form['product_name']
-            order['ref_number'] = request.form['ref_number']
-            order['description'] = request.form['description']
-            order['price'] = float(request.form['price'])
-            order['quantity'] = int(request.form['quantity'])
-            order['total_price'] = order['price'] * order['quantity']
-            orders[index] = order
+            order['product_name'] = request.form.get('product_name', order.get('product_name'))
+            order['ref_number'] = request.form.get('ref_number', order.get('ref_number'))
+            order['description'] = request.form.get('description', order.get('description'))
+            order['price'] = float(request.form.get('price', order.get('price', 0)))
+            order['quantity'] = int(request.form.get('quantity', order.get('quantity', 1)))
+            order['purchase_price'] = float(request.form.get('purchase_price', order.get('purchase_price', 0)))
+            order['selling_price'] = float(request.form.get('selling_price', order.get('selling_price', 0)))
+            order['min_selling_price'] = float(request.form.get('min_selling_price', order.get('min_selling_price', 0)))
 
+            # Optional: update photo link if provided
+            photo_link = request.form.get('photo_link')
+            if photo_link:
+                order['photo_link'] = photo_link
+
+            # Recalculate total
+            order['total_price'] = round(order['price'] * order['quantity'], 2)
+
+            # Save updated orders
+            orders[index] = order
             with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
                 json.dump(orders, f, indent=2, ensure_ascii=False)
 
-            flash('Bestellung aktualisiert.', 'success')
+            flash('Bestellung erfolgreich aktualisiert.', 'success')
             return redirect(url_for('list_orders'))
         except Exception as e:
             flash(f'Fehler beim Speichern: {e}', 'danger')
