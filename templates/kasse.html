@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %}Kasse{% endblock %}
+{% block content %}
+<div class="container mt-4">
+  <h2>Kasse</h2>
+
+  <div class="mb-3">
+    <button class="btn btn-success" onclick="openPopup('einzahlung')">💰 Einzahlung</button>
+    <button class="btn btn-danger" onclick="openPopup('auszahlung')">💸 Auszahlung</button>
+  </div>
+
+  <table class="table table-bordered table-striped">
+    <thead class="table-light">
+      <tr>
+        <th>Datum</th>
+        <th>Typ</th>
+        <th>Betrag</th>
+        <th>Beschreibung</th>
+        <th>Benutzer</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in transactions %}
+      <tr>
+        <td>{{ t.date[:10] }} {{ t.date[11:16] }}</td>
+        <td>{{ t.type.capitalize() }}</td>
+        <td style="color: {{ 'green' if t.amount > 0 else 'red' }}">€{{ "{:.2f}".format(t.amount) }}</td>
+        <td>{{ t.description }}</td>
+        <td>{{ t.user }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" class="text-center">Keine Einträge vorhanden.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Popup Form -->
+<div id="popupForm" style="display: none; position: fixed; top: 20%; left: 50%; transform: translateX(-50%);
+     background: white; padding: 20px; border: 2px solid #ccc; border-radius: 8px; z-index: 1000;">
+  <form method="post">
+    <input type="hidden" name="typ" id="popupTyp">
+    <div class="mb-3">
+      <label>Betrag (€):</label>
+      <input type="number" step="0.01" name="betrag" class="form-control" required>
+    </div>
+    <div class="mb-3">
+      <label>Beschreibung:</label>
+      <textarea name="beschreibung" class="form-control" rows="2" required></textarea>
+    </div>
+    <div class="d-flex justify-content-between">
+      <button type="submit" class="btn btn-primary">Speichern</button>
+      <button type="button" class="btn btn-secondary" onclick="closePopup()">Abbrechen</button>
+    </div>
+  </form>
+</div>
+
+<script>
+  function openPopup(type) {
+    document.getElementById('popupTyp').value = type;
+    document.getElementById('popupForm').style.display = 'block';
+  }
+  function closePopup() {
+    document.getElementById('popupForm').style.display = 'none';
+  }
+</script>
+{% endblock %}

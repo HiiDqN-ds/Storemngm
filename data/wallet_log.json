@@ -1,0 +1,13 @@
+[
+  {
+    "date": "2025-07-04T18:02:09.764026",
+    "change_type": "manual",
+    "amount": 500.0
+  },
+  {
+    "date": "2025-07-04T18:02:32.989854",
+    "change_type": "manual",
+    "amount": 1900.0,
+    "user": "admin"
+  }
+]

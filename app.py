@@ -255,15 +255,89 @@ def format_currency_de(amount):
 
 # Set_wallet_balance
 @app.route('/set_wallet_balance', methods=['POST'])
-@login_required('admin')  # optional, but recommended
+@login_required('admin')
 def set_wallet_balance():
     wallet_balance = request.form.get('wallet_balance', type=float)
     if wallet_balance is not None and wallet_balance >= 0:
         session['wallet_balance'] = wallet_balance
+        log_wallet_change(wallet_balance, change_type="manual")
         flash('Wallet-Bestand wurde aktualisiert.', 'success')
     else:
         flash('Ungültiger Betrag.', 'error')
     return redirect(url_for('admin_dashboard'))
+
+def get_latest_wallet_balance():
+    wallet_file = os.path.join('data', 'wallet.json')
+    if os.path.exists(wallet_file):
+        with open(wallet_file, 'r', encoding='utf-8') as f:
+            try:
+                log = json.load(f)
+                if log:
+                    return log[-1]['amount']  # last saved balance
+            except json.JSONDecodeError:
+                pass
+    return 0.0  # fallback
+
+#Saving Everyday History
+def save_dashboard_snapshot(date, daily_profit, monthly_profit, wallet_balance, all_time_profit):
+    history_file = os.path.join('data', 'dashboard_history.json')
+    
+    if os.path.exists(history_file):
+        with open(history_file, 'r', encoding='utf-8') as f:
+            try:
+                history = json.load(f)
+            except json.JSONDecodeError:
+                history = []
+    else:
+        history = []
+
+    # Avoid duplicate entry for the same day
+    if any(entry.get("date") == date.isoformat() for entry in history):
+        return
+
+    history.append({
+        "date": date.isoformat(),
+        "daily_profit": round(daily_profit, 2),
+        "monthly_profit": round(monthly_profit, 2),
+        "wallet_balance": round(wallet_balance, 2),
+        "all_time_profit": round(all_time_profit, 2)
+    })
+
+    with open(history_file, 'w', encoding='utf-8') as f:
+        json.dump(history, f, indent=2, ensure_ascii=False)
+
+#log_wallet_change
+def log_wallet_change(amount, change_type="manual"):
+    wallet_file = os.path.join('data', 'wallet_log.json')
+
+    # Load old log
+    if os.path.exists(wallet_file):
+        with open(wallet_file, 'r', encoding='utf-8') as f:
+            try:
+                log = json.load(f)
+            except json.JSONDecodeError:
+                log = []
+    else:
+        log = []
+
+    # Get the username from session
+    username = session.get('username', 'unknown')
+
+    # Append new entry
+    log.append({
+        "date": datetime.now().isoformat(),
+        "change_type": change_type,
+        "amount": round(amount, 2),
+        "user": username
+    })
+
+    # Save updated log
+    with open(wallet_file, 'w', encoding='utf-8') as f:
+        json.dump(log, f, indent=2, ensure_ascii=False)
+
+
+
+
 
 def generate_csv(data, fieldnames):
     """Generate CSV response from list of dicts."""
@@ -1169,6 +1243,56 @@ def list_salary_payments():
         payments = []
     payments = payments[::-1]
     return render_template('list_salary_payments.html', payments=payments)
+
+
+
+@app.route('/kasse', methods=['GET', 'POST'])
+@login_required('admin')
+def kasse():
+    kasse_file = os.path.join('data', 'kasse.json')
+    transactions = []
+
+    if os.path.exists(kasse_file):
+        with open(kasse_file, 'r', encoding='utf-8') as f:
+            try:
+                transactions = json.load(f)
+            except json.JSONDecodeError:
+                transactions = []
+
+    if request.method == 'POST':
+        try:
+            amount = float(request.form['betrag'])
+            description = request.form.get('beschreibung', '').strip()
+            ktype = request.form.get('typ')  # "einzahlung" or "auszahlung"
+            if ktype not in ['einzahlung', 'auszahlung']:
+                raise ValueError("Ungültiger Typ")
+
+            if ktype == 'auszahlung':
+                amount = -abs(amount)  # make it negative
+
+            transaction = {
+                "date": datetime.now().isoformat(),
+                "amount": round(amount, 2),
+                "type": ktype,
+                "description": description,
+                "user": session.get('username', 'unbekannt')
+            }
+
+            transactions.append(transaction)
+
+            with open(kasse_file, 'w', encoding='utf-8') as f:
+                json.dump(transactions, f, indent=2, ensure_ascii=False)
+
+            flash(f"{ktype.capitalize()} gespeichert.", "success")
+            return redirect(url_for('kasse'))
+
+        except Exception as e:
+            flash(f"Fehler: {e}", "danger")
+
+    return render_template("kasse.html", transactions=reversed(transactions))  # newest first
+
+
+
 
 
 

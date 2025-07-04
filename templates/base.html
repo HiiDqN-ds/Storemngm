@@ -91,6 +91,7 @@
     <nav class="ms-auto d-flex flex-column flex-lg-row align-items-start align-items-lg-center gap-2">
       {% if session.get('role') == 'admin' %}
         <a href="{{ url_for('admin_dashboard') }}" class="btn nav-btn"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+        <a href="{{ url_for('kasse') }}" class="btn nav-btn"><i class="bi bi-cash-coin me-1"></i> Kasse</a>
         <a href="{{ url_for('list_items') }}" class="btn nav-btn"><i class="bi bi-box-seam me-1"></i> Produkte</a>
 
         <div class="dropdown">
@@ -128,6 +129,7 @@
 
       {% elif session.get('role') == 'seller' %}
         <a href="{{ url_for('seller_dashboard') }}" class="btn nav-btn"><i class="bi bi-speedometer2 me-1"></i> Dashboard</a>
+        <a href="{{ url_for('kasse') }}" class="btn nav-btn"><i class="bi bi-cash-coin me-1"></i> Kasse</a>
         <a href="{{ url_for('seller_items') }}" class="btn nav-btn"><i class="bi bi-box-seam me-1"></i> Produkte</a>
 
         <div class="dropdown">
