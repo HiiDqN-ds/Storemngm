@@ -1,22 +1,12 @@
 [
     {
         "seller": "admin",
-        "barcode": "118558299397",
-        "name": "Produkte A",
+        "barcode": "924937696821",
+        "name": "Iphone 14 Pro Max",
         "quantity": 1,
-        "sale_price": 360.0,
-        "purchase_price": 250.0,
-        "total_price": 360.0,
-        "date": "2025-07-04T00:58:19.340923"
-    },
-    {
-        "seller": "admin",
-        "barcode": "118558299397",
-        "name": "Produkte A",
-        "quantity": 3,
-        "sale_price": 360.0,
-        "purchase_price": 250.0,
-        "total_price": 1080.0,
-        "date": "2025-07-04T00:58:30.058961"
+        "sale_price": 820.0,
+        "purchase_price": 690.0,
+        "total_price": 820.0,
+        "date": "2025-07-04T19:27:31.376114"
     }
 ]
