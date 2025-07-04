@@ -537,15 +537,23 @@ def admin_sales():
     sales = sales[::-1]
     return render_template('admin_sales.html', sales=sales)
 
-# Admin: Add Item
 @app.route('/admin/add_item', methods=['GET', 'POST'])
 @login_required('admin')
 def add_item():
     if request.method == 'POST':
         form_data = request.form
+        barcode = form_data['barcode']
+
+        items = load_json(ITEMS_FILE)
+
+        # ✅ Check for duplicate barcode
+        if any(item.get('barcode') == barcode for item in items):
+            flash(f'⚠️ Ein Artikel mit dem Barcode "{barcode}" existiert bereits!', 'danger')
+            return redirect(url_for('add_item'))
+
         new_item = {
             "name": form_data['name'],
-            "barcode": form_data['barcode'],
+            "barcode": barcode,
             "purchase_price": float(form_data['purchase_price']),
             "selling_price": float(form_data['selling_price']),
             "min_selling_price": float(form_data['min_selling_price']),
@@ -555,13 +563,13 @@ def add_item():
             "seller": session.get('username', 'unknown')
         }
 
-        items = load_json(ITEMS_FILE)
         items.append(new_item)
         save_json(ITEMS_FILE, items)
         flash('✅ Neuer Artikel hinzugefügt.', 'success')
         return redirect(url_for('list_items'))
 
     return render_template('add_item.html', item=None)
+
 
 
 

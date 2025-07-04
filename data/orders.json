@@ -10,5 +10,17 @@
     "date": "2025-07-04",
     "user": "admin",
     "barcode": "barcodes/code_barres_831926988830"
+  },
+  {
+    "order_number": "683575297447",
+    "product_name": "xxxxx",
+    "ref_number": "85858",
+    "description": "dfgdfgdf",
+    "price": 885.0,
+    "quantity": 1,
+    "total_price": 885.0,
+    "date": "2025-07-04",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_683575297447"
   }
 ]
