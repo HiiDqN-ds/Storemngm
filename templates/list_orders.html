@@ -39,9 +39,8 @@
     <th>Selling Price (€)</th>
     <th>Min Selling Price (€)</th>
     <th>Menge</th>
-    <th>Einheitspreis (€)</th>
+
     <th>Beschreibung</th>
-    <th>Gesamtpreis (€)</th>
     <th>Photo</th>
     <th>Datum</th>
     <th>Benutzer</th>
@@ -52,29 +51,28 @@
   {% if orders %}
     {% for order in orders %}
     <tr>
-      <td>{{ order.product_name | default('-') }}</td>
-      <td>{{ order.order_number | default('-') }}</td>
-      <td>{{ order.purchase_price | default(0) | round(2) }}</td>
+      <td>{{ order.product_name }}</td>
+      <td>{{ order.order_number }}</td>
+      <td>{{ order.price | default(0) | round(2) }}</td>
       <td>{{ order.selling_price | default(0) | round(2) }}</td>
       <td>{{ order.min_selling_price | default(0) | round(2) }}</td>
-      <td>{{ order.quantity | default(0) }}</td>
-      <td>{{ order.price | default(0) | round(2) }}</td>
-      <td>{{ order.description | default('-') }}</td>
-      <td>{{ order.total_price | default(0) | round(2) }}</td>
+      <td>{{ order.quantity }}</td>
+      <td>{{ order.description or '-' }}</td>
       <td>
-        {% if order.photo_link %}
-          <img src="{{ url_for('static', filename=order.photo_link) }}" alt="Foto" style="max-height: 60px;">
+        {% if order.photo %}
+          <img src="{{ url_for('static', filename=order.photo) }}" style="max-width: 80px;">
         {% else %}
-          Kein Foto
+          -
         {% endif %}
       </td>
-      <td>{{ order.date | default('-') }}</td>
-      <td>{{ order.user | default('-') }}</td>
+      <td>{{ order.total_price | default(0) | round(2) }}</td>
+      <td>{{ order.date }}</td>
+      <td>{{ order.user }}</td>
       <td class="text-nowrap">
         <button class="btn btn-outline-primary btn-sm me-1" title="Quittung drucken" onclick="printReceipt({{ loop.index0 }})">
           <i class="bi bi-receipt me-1"></i>
         </button>
-        <button class="btn btn-outline-primary btn-sm me-1" title="Barcode drucken" onclick="printQRCode({{ loop.index0 }})">
+        <button class="btn btn-outline-primary btn-sm me-1" title="Code drucken" onclick="printQRCode({{ loop.index0 }})">
           <i class="bi bi-upc-scan"></i>
         </button>
         <a href="{{ url_for('edit_order', index=loop.index0) }}" class="btn btn-sm btn-warning me-1" title="Bearbeiten">
@@ -94,7 +92,6 @@
     </tr>
   {% endif %}
 </tbody>
-
 
 </table>
     </div>

@@ -568,7 +568,7 @@ def list_items():
         item['description'] = item.get('description', '')
         item['photo_link'] = item.get('image_url', '')
 
-    return render_template('items.html', items=items)
+    return render_template('items.html',  items=items[::-1])
 
 
 # Admin: List Items to Edit
