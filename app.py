@@ -471,10 +471,10 @@ def delete_seller(username):
 @app.route('/admin/items')
 @login_required('admin')
 def list_items():
-    items = load_json(ITEMS_FILE)
+    items = load_json(ITEMS_FILE)[::-1]  # newest items first
 
     for item in items:
-        # Normalize product_name robustly
+        # Normalize product_name
         product_name = item.get('product_name')
         if not product_name or not str(product_name).strip():
             product_name = item.get('name', '').strip()
@@ -484,7 +484,7 @@ def list_items():
 
         item['product_name'] = product_name
 
-        # Normalize other fields safely
+        # Normalize other fields
         item['barcode'] = item.get('barcode', '')
         item['purchase_price'] = float(item.get('purchase_price', 0) or 0)
         item['selling_price'] = float(item.get('selling_price', 0) or 0)
@@ -493,18 +493,8 @@ def list_items():
         item['description'] = item.get('description', '')
         item['photo_link'] = item.get('image_url', '')
 
-    # Sort items alphabetically by product_name (case-insensitive)
-    items.sort(key=lambda x: x['product_name'].lower())
-    # reverse to show descending order if you want
-    
-    for item in items:
-        try:
-            item['date_obj'] = datetime.fromisoformat(item.get('date', '1900-01-01'))
-        except ValueError:
-            item['date_obj'] = datetime.min
-
-    items = sorted(items, key=lambda x: x['date_obj'], reverse=True)
     return render_template('items.html', items=items)
+
 
 # Admin: List Items to Edit
 import io
