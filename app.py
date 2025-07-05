@@ -248,7 +248,17 @@ def admin_dashboard():
         sales=sales_sorted,
         purchases=purchases_sorted
     )
-
+def load_wallet_balance():
+    kasse_file = os.path.join('data', 'kasse.json')
+    balance = 0.0
+    if os.path.exists(kasse_file):
+        with open(kasse_file, 'r', encoding='utf-8') as f:
+            try:
+                transactions = json.load(f)
+                balance = sum(t.get('amount', 0) for t in transactions)
+            except json.JSONDecodeError:
+                pass
+    return round(balance, 2)
 
 def format_currency_de(amount):
     return f"€{amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
