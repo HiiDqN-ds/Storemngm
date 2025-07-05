@@ -6,13 +6,29 @@
     <h2>Kasse</h2>
     <div class="text-end">
       <div class="alert alert-info py-2 px-3 shadow-sm">
-        <strong>Aktueller Betrag:</strong><br>
+        <strong>Aktueller Betrag (Kasse):</strong><br>
         <span style="font-size: 1.4em; color: {{ 'green' if current_balance >= 0 else 'red' }}">
           €{{ "{:.2f}".format(current_balance) }}
+        </span>
+        <hr>
+        <strong>Einnahmen (Verkäufe heute):</strong><br>
+        <span style="font-size: 1.2em; color: green;">
+          + €{{ "{:.2f}".format(total_sold_today) }}
+        </span>
+        <hr>
+        <strong>Ausgaben (Bestellungen heute):</strong><br>
+        <span style="font-size: 1.2em; color: red;">
+          − €{{ "{:.2f}".format(total_orders_today) }}
+        </span>
+        <hr>
+        <strong>Berechneter Kassenstand:</strong><br>
+        <span style="font-size: 1.4em; color: {{ 'green' if total_balance >= 0 else 'red' }}">
+          €{{ "{:.2f}".format(total_balance) }}
         </span>
       </div>
     </div>
   </div>
+
   <div class="mb-3">
     <button class="btn btn-success" onclick="openPopup('einzahlung')">💰 Einzahlung</button>
     <button class="btn btn-danger" onclick="openPopup('auszahlung')">💸 Auszahlung</button>
@@ -26,6 +42,9 @@
         <th>Betrag</th>
         <th>Beschreibung</th>
         <th>Benutzer</th>
+        {% if role == 'admin' %}
+        <th>Aktionen</th>
+        {% endif %}
       </tr>
     </thead>
     <tbody>
@@ -36,17 +55,17 @@
         <td style="color: {{ 'green' if t.amount > 0 else 'red' }}">€{{ "{:.2f}".format(t.amount) }}</td>
         <td>{{ t.description }}</td>
         <td>{{ t.user }}</td>
-        {% if session.role == 'admin' %}
+        {% if role == 'admin' %}
         <td>
-        <form method="post" onsubmit="return confirm('Diesen Eintrag wirklich löschen?');">
+          <form method="post" onsubmit="return confirm('Diesen Eintrag wirklich löschen?');">
             <input type="hidden" name="delete_index" value="{{ loop.index0 }}">
             <button type="submit" class="btn btn-sm btn-danger">🗑️</button>
-        </form>
+          </form>
         </td>
         {% endif %}
       </tr>
       {% else %}
-      <tr><td colspan="5" class="text-center">Keine Einträge vorhanden.</td></tr>
+      <tr><td colspan="{{ 6 if role == 'admin' else 5 }}" class="text-center">Keine Einträge vorhanden.</td></tr>
       {% endfor %}
     </tbody>
   </table>

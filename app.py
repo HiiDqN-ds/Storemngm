@@ -1296,22 +1296,45 @@ def list_salary_payments():
     payments = payments[::-1]
     return render_template('list_salary_payments.html', payments=payments)
 
- # Kasse
+
+
+# Kasse
 @app.route('/kasse', methods=['GET', 'POST'])
 @login_required(['admin', 'seller'])
 def kasse():
     kasse_file = os.path.join('data', 'kasse.json')
+    sales_file = os.path.join('data', 'sales.json')
+    purchases_file = os.path.join('data', 'orders.json')
+    
     transactions = []
-
-    # Load existing transactions
+    sales = []
+    purchases = []
+    
+    # Load kasse transactions
     if os.path.exists(kasse_file):
         with open(kasse_file, 'r', encoding='utf-8') as f:
             try:
                 transactions = json.load(f)
             except json.JSONDecodeError:
                 transactions = []
-
-    # Handle POST: add or delete
+    
+    # Load sales data
+    if os.path.exists(sales_file):
+        with open(sales_file, 'r', encoding='utf-8') as f:
+            try:
+                sales = json.load(f)
+            except json.JSONDecodeError:
+                sales = []
+    
+    # Load purchase data
+    if os.path.exists(purchases_file):
+        with open(purchases_file, 'r', encoding='utf-8') as f:
+            try:
+                purchases = json.load(f)
+            except json.JSONDecodeError:
+                purchases = []
+    
+    # Handle POST requests (add or delete transactions)
     if request.method == 'POST':
         if 'delete_index' in request.form and session.get('role') == 'admin':
             try:
@@ -1326,19 +1349,19 @@ def kasse():
             except Exception as e:
                 flash(f"Fehler beim Löschen: {e}", "danger")
             return redirect(url_for('kasse'))
-
+        
         try:
             amount = float(request.form['betrag'])
             description = request.form.get('beschreibung', '').strip()
             ktype = request.form.get('typ')  # "einzahlung" or "auszahlung"
             if ktype not in ['einzahlung', 'auszahlung']:
                 raise ValueError("Ungültiger Typ")
-
+            
             if ktype == 'auszahlung':
                 amount = -abs(amount)
             else:
                 amount = abs(amount)
-
+            
             transaction = {
                 "date": datetime.now().isoformat(),
                 "amount": round(amount, 2),
@@ -1346,27 +1369,49 @@ def kasse():
                 "description": description,
                 "user": session.get('username', 'unbekannt')
             }
-
+            
             transactions.append(transaction)
-
+            
             with open(kasse_file, 'w', encoding='utf-8') as f:
                 json.dump(transactions, f, indent=2, ensure_ascii=False)
-
+            
             flash(f"{ktype.capitalize()} gespeichert.", "success")
             return redirect(url_for('kasse'))
-
+        
         except Exception as e:
             flash(f"Fehler: {e}", "danger")
-
-    # 🧮 Calculate current balance
+    
+    # Calculate current balance in kasse
     current_balance = sum(t.get('amount', 0) for t in transactions)
-
+    
+    # Calculate today's sold total from sales.json
+    today = datetime.now().date()
+    total_sold_today = sum(
+        s.get('total_price', 0)
+        for s in sales
+        if 'date' in s and datetime.fromisoformat(s['date']).date() == today
+    )
+    
+    # Calculate today's total orders (expenses) from purchases.json
+    total_orders_today = sum(
+        p.get('total_price', 0)
+        for p in purchases
+        if 'date' in p and datetime.fromisoformat(p['date']).date() == today
+    )
+    
+    # Calculate total balance: kasse + today's sales - today's orders
+    total_balance = current_balance + total_sold_today - total_orders_today
+    
     return render_template(
         "kasse.html",
         transactions=reversed(transactions),
         role=session.get('role'),
-        current_balance=current_balance
+        current_balance=current_balance,
+        total_sold_today=total_sold_today,
+        total_orders_today=total_orders_today,
+        total_balance=total_balance
     )
+
 
 
 
