@@ -157,18 +157,17 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
-# Admin Dashboard
+
 @app.route('/admin')
 @login_required('admin')
 def admin_dashboard():
-    sales = load_sales()          # Load sales JSON data
-    purchases = load_purchases()  # Load purchases JSON data
-    items = load_items()          # Load item data (needed for purchase prices)
-
+    sales = load_sales()
+    purchases = load_purchases()
+    items = load_items()
     now = datetime.now()
     today = now.date()
 
-    # Parse sale dates (string -> datetime)
+    # Format sales dates
     for sale in sales:
         if isinstance(sale.get('date'), str):
             try:
@@ -176,7 +175,7 @@ def admin_dashboard():
             except ValueError:
                 sale['date'] = datetime.min
 
-    # Parse purchase dates (string -> datetime)
+    # Format purchase dates
     for purchase in purchases:
         if isinstance(purchase.get('date'), str):
             try:
@@ -184,81 +183,101 @@ def admin_dashboard():
             except ValueError:
                 purchase['date'] = datetime.min
 
-    # Daily profit (today's sales total)
-    daily_profit = sum(
-        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
-        for s in sales
-        if s['date'].date() == today
-    )
-
-    # Monthly profit = (monthly sales - monthly purchases)
-    monthly_sales = sum(
-        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
-        for s in sales
-        if s['date'].year == now.year and s['date'].month == now.month
-    )
-
-    monthly_purchases = sum(
-        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
-        for p in purchases
-        if p['date'].year == now.year and p['date'].month == now.month
-    )
-
-    monthly_profit = monthly_sales - monthly_purchases
-
-    # Total sales and purchases (all time)
-    total_sales = sum(
-        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
-        for s in sales
-    )
-    total_purchases = sum(
-        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
-        for p in purchases
-    )
-
-    # Calculate all-time profit = total of (sale price - purchase price) * quantity
+    # Build lookup for purchase prices by barcode
     barcode_to_purchase_price = {
         item['barcode']: item.get('purchase_price', 0) for item in items
     }
 
-    all_time_profit = 0.0
+    all_time_profit = 0
+
     for s in sales:
-        barcode = s.get('barcode')
-        quantity = s.get('quantity', 0)
-        sale_price = s.get('sale_price', 0)
-        purchase_price = barcode_to_purchase_price.get(barcode, 0)
-        profit = (sale_price - purchase_price) * quantity
-        all_time_profit += profit
+        try:
+            purchase_price = float(s.get('purchase_price', 0))
+            sale_price = float(s.get('sale_price', 0))
+            quantity = int(s.get('quantity', 0))
+
+            profit = (sale_price - purchase_price) * quantity
+            s['profit'] = round(profit, 2)
+
+            print(f"Sale: {s.get('name')}, Purchase Price: {purchase_price}, Sale Price: {sale_price}, Quantity: {quantity}, Profit: {profit}")
+
+            all_time_profit += profit
+        except Exception as e:
+            print(f"Error processing sale {s}: {e}")
+            s['profit'] = 0
 
     all_time_profit = round(all_time_profit, 2)
+    print(f"All-time profit: {all_time_profit}")
+    
 
-    # Wallet balance = session or fallback to calculated
-    wallet_balance = session.get('wallet_balance', total_sales - total_purchases)
+    # Daily totals
+    daily_sales_total = sum(
+        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
+        for s in sales if s['date'].date() == today
+    )
+    daily_purchases_total = sum(
+        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
+        for p in purchases if p['date'].date() == today
+    )
+    daily_profit = round(daily_sales_total - daily_purchases_total, 2)
 
-    # Sort by date for display
+    # Monthly totals
+    monthly_sales = sum(
+        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
+        for s in sales if s['date'].year == now.year and s['date'].month == now.month
+    )
+    monthly_purchases = sum(
+        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
+        for p in purchases if p['date'].year == now.year and p['date'].month == now.month
+    )
+    monthly_profit = round(monthly_sales - monthly_purchases, 2)
+
+    # Sort for table display
     sales_sorted = sorted(sales, key=lambda x: x['date'], reverse=True)
     purchases_sorted = sorted(purchases, key=lambda x: x['date'], reverse=True)
 
+    # Wallet (Kasse)
+    kasse_balance = load_kasse_balance()
+
+    # Kassenstand = Wallet + daily sales - daily purchases
+    total_balance = round(kasse_balance + daily_sales_total - daily_purchases_total, 2)
+    print('total_price is ', all_time_profit)
+    # Send to template
     return render_template(
         "admin_dashboard.html",
         daily_profit=daily_profit,
         monthly_profit=monthly_profit,
-        wallet_balance=wallet_balance,
         all_time_profit=all_time_profit,
+        wallet_balance=kasse_balance,
+        total_balance=total_balance,
         sales=sales_sorted,
         purchases=purchases_sorted
     )
-def load_wallet_balance():
+
+
+
+
+
+# Load_kasse_balance
+import os
+import json
+
+def load_kasse_balance():
     kasse_file = os.path.join('data', 'kasse.json')
     balance = 0.0
     if os.path.exists(kasse_file):
         with open(kasse_file, 'r', encoding='utf-8') as f:
             try:
                 transactions = json.load(f)
-                balance = sum(t.get('amount', 0) for t in transactions)
+                for t in transactions:
+                    if t.get('type') == 'einzahlung':
+                        balance += t.get('amount', 0)
+                    elif t.get('type') == 'auszahlung':
+                        balance -= t.get('amount', 0)
             except json.JSONDecodeError:
                 pass
     return round(balance, 2)
+
 
 def format_currency_de(amount):
     return f"€{amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
@@ -349,7 +368,10 @@ def log_wallet_change(amount, change_type="manual"):
 
 
 
+ # Generate CSV
 
+
+#Log generate_csv
 def generate_csv(data, fieldnames):
     """Generate CSV response from list of dicts."""
     def generate():
@@ -368,7 +390,6 @@ def reset_wallet_balance():
 
 
 # Download CSV routes
-
 @app.route('/download/sales.csv')
 @login_required('admin')
 def download_sales_csv():
@@ -582,11 +603,6 @@ def list_items():
 
 
 # Admin: List Items to Edit
-import io
-from flask import send_file
-import barcode
-from barcode.writer import ImageWriter
-
 @app.route('/admin/items/barcode_print/<barcode_value>')
 @login_required('admin')
 def barcode_print(barcode_value):
@@ -927,16 +943,7 @@ def pay_salary():
 
     return render_template('pay_salary.html', users=users)
 
-
-from flask import request, session, flash, redirect, url_for, render_template
-import os
-import json
-import random
-from datetime import datetime
-from werkzeug.utils import secure_filename
-import barcode
-from barcode.writer import ImageWriter
-
+# order a  new item
 @app.route('/order', methods=['GET', 'POST'])
 def order():
     if session.get('role') not in ['admin', 'seller']:

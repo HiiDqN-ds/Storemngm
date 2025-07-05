@@ -7,6 +7,16 @@
         "sale_price": 500.0,
         "purchase_price": 360.0,
         "total_price": 500.0,
-        "date": "2025-07-05T20:30:29.193348"
+        "date": "2025-07-05T22:48:31.144010"
+    },
+    {
+        "seller": "admin",
+        "barcode": "817241420900",
+        "name": "galaxy A26",
+        "quantity": 1,
+        "sale_price": 360.0,
+        "purchase_price": 270,
+        "total_price": 360.0,
+        "date": "2025-07-05T22:53:39.362174"
     }
 ]
