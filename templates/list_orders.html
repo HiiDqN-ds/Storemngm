@@ -35,13 +35,13 @@
   <tr>
     <th>Produktname</th>
     <th>Barcode</th>
-    <th>Purchase Price (€)</th>
-    <th>Selling Price (€)</th>
-    <th>Min Selling Price (€)</th>
+    <th>Einkaufspreis (€)</th>
+    <th>Verkaufspreis (€)</th>
+    <th>Min Verkaufspreis (€)</th>
     <th>Menge</th>
-
     <th>Beschreibung</th>
     <th>Photo</th>
+    <th>Gesamtpreis (€)</th>
     <th>Datum</th>
     <th>Benutzer</th>
     <th>Aktionen</th>
@@ -65,7 +65,7 @@
           -
         {% endif %}
       </td>
-      <td>{{ order.total_price | default(0) | round(2) }}</td>
+      <td>€{{ order.total_price | default(0) | round(2) }}</td>
       <td>{{ order.date }}</td>
       <td>{{ order.user }}</td>
       <td class="text-nowrap">
@@ -88,10 +88,11 @@
     {% endfor %}
   {% else %}
     <tr>
-      <td colspan="13" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
+      <td colspan="12" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
     </tr>
   {% endif %}
 </tbody>
+
 
 </table>
     </div>

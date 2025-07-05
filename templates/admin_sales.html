@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
-{% block title %}Admin Sales History{% endblock %}
+{% block title %}Verkaufsverlauf Admin{% endblock %}
 
 {% block content %}
-<h2>All Sales History</h2>
+<h2>Gesamter Verkaufsverlauf</h2>
 
 <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 
 <table class="table table-bordered align-middle">
   <thead class="table-light">
     <tr>
-      <th>Seller</th>
-      <th>Item Barcode</th>
-      <th>Quantity</th>
-      <th>Sale Price (€)</th>
-      <th>Date</th>
+      <th>Verkäufer</th>
+      <th>Artikel Barcode</th>
+      <th>Menge</th>
+      <th>Verkaufspreis (€)</th>
+      <th>Datum</th>
       <th>Aktionen</th>
     </tr>
   </thead>
@@ -28,17 +28,17 @@
       <td>{{ sale['date'] }}</td>
       <td class="d-flex gap-1 flex-wrap">
 
-        <!-- Receipt Button -->
+        <!-- Quittung Button -->
         <button onclick='showReceiptInPopup({{ sale | tojson | safe }})' class="btn btn-sm btn-info" title="Quittung anzeigen">
           <i class="bi bi-receipt"></i>
         </button>
 
-        <!-- Edit Button -->
+        <!-- Bearbeiten Button -->
         <a href="{{ url_for('edit_sale', index=loop.index0) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
           <i class="bi bi-pencil-square"></i>
         </a>
 
-        <!-- Delete Button -->
+        <!-- Löschen Button -->
         <form method="post" action="{{ url_for('delete_sale', index=loop.index0) }}" onsubmit="return confirm('Verkauf wirklich löschen?')">
           <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
             <i class="bi bi-trash"></i>
@@ -48,12 +48,12 @@
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="6">No sales found.</td></tr>
+    <tr><td colspan="6">Keine Verkäufe gefunden.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 
-<!-- html2pdf for receipt -->
+<!-- html2pdf für Quittung -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>

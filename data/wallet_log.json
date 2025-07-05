@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "date": "2025-07-05T16:18:31.006174",
+    "change_type": "manual",
+    "amount": 100.0,
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-05T16:18:39.333341",
+    "change_type": "manual",
+    "amount": 500.0,
+    "user": "admin"
+  }
+]

@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "order_number": "817241420830",
+    "product_name": "galaxy A26",
+    "ref_number": "sdfsdf",
+    "description": "",
+    "price": 80.0,
+    "selling_price": 90.0,
+    "min_selling_price": 85.0,
+    "quantity": 1,
+    "total_price": 80.0,
+    "date": "2025-07-05",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_817241420830",
+    "photo": ""
+  }
+]

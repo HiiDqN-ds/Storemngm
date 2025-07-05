@@ -1,1 +1,15 @@
-[]
+[
+    {
+        "product_name": "galaxy A26",
+        "barcode": "817241420900",
+        "purchase_price": 80.0,
+        "selling_price": 90.0,
+        "min_selling_price": 85.0,
+        "quantity": 0,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "name": "galaxy A26",
+        "price": 90.0
+    }
+]
