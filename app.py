@@ -1286,8 +1286,7 @@ def list_salary_payments():
     payments = payments[::-1]
     return render_template('list_salary_payments.html', payments=payments)
 
-
-
+ # Kasse
 @app.route('/kasse', methods=['GET', 'POST'])
 @login_required(['admin', 'seller'])
 def kasse():
@@ -1302,7 +1301,7 @@ def kasse():
             except json.JSONDecodeError:
                 transactions = []
 
-    # Handle add or delete
+    # Handle POST: add or delete
     if request.method == 'POST':
         if 'delete_index' in request.form and session.get('role') == 'admin':
             try:
@@ -1318,7 +1317,6 @@ def kasse():
                 flash(f"Fehler beim Löschen: {e}", "danger")
             return redirect(url_for('kasse'))
 
-        # Normal addition
         try:
             amount = float(request.form['betrag'])
             description = request.form.get('beschreibung', '').strip()
@@ -1328,6 +1326,8 @@ def kasse():
 
             if ktype == 'auszahlung':
                 amount = -abs(amount)
+            else:
+                amount = abs(amount)
 
             transaction = {
                 "date": datetime.now().isoformat(),
@@ -1348,11 +1348,15 @@ def kasse():
         except Exception as e:
             flash(f"Fehler: {e}", "danger")
 
-    return render_template("kasse.html", transactions=reversed(transactions), role=session.get('role'))
+    # 🧮 Calculate current balance
+    current_balance = sum(t.get('amount', 0) for t in transactions)
 
-
-
-
+    return render_template(
+        "kasse.html",
+        transactions=reversed(transactions),
+        role=session.get('role'),
+        current_balance=current_balance
+    )
 
 
 

@@ -1,37 +1,3 @@
 [
-  {
-    "date": "2025-07-04T18:02:09.764026",
-    "change_type": "manual",
-    "amount": 500.0
-  },
-  {
-    "date": "2025-07-04T18:02:32.989854",
-    "change_type": "manual",
-    "amount": 1900.0,
-    "user": "admin"
-  },
-  {
-    "date": "2025-07-04T18:36:31.008582",
-    "change_type": "manual",
-    "amount": 0.0,
-    "user": "admin"
-  },
-  {
-    "date": "2025-07-04T18:37:54.388799",
-    "change_type": "manual",
-    "amount": 0.0,
-    "user": "admin"
-  },
-  {
-    "date": "2025-07-04T19:01:58.333293",
-    "change_type": "manual",
-    "amount": 0.0,
-    "user": "admin"
-  },
-  {
-    "date": "2025-07-04T19:27:01.922380",
-    "change_type": "manual",
-    "amount": 0.0,
-    "user": "admin"
-  }
+
 ]

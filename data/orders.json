@@ -1,17 +1,1 @@
-[
-  {
-    "order_number": "001937239915",
-    "product_name": "galaxy A26",
-    "ref_number": "galaxy A26",
-    "description": "",
-    "price": 260.0,
-    "selling_price": 360.0,
-    "min_selling_price": 320.0,
-    "quantity": 1,
-    "total_price": 260.0,
-    "date": "2025-07-04",
-    "user": "admin",
-    "barcode": "barcodes/code_barres_001937239915",
-    "photo": ""
-  }
-]
+[]

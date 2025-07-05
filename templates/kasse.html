@@ -3,7 +3,17 @@
 {% block content %}
 <div class="container mt-4">
   <h2>Kasse</h2>
-
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Kasse</h2>
+    <div class="text-end">
+      <div class="alert alert-info py-2 px-3 shadow-sm">
+        <strong>Aktueller Betrag:</strong><br>
+        <span style="font-size: 1.4em; color: {{ 'green' if current_balance >= 0 else 'red' }}">
+          €{{ "{:.2f}".format(current_balance) }}
+        </span>
+      </div>
+    </div>
+  </div>
   <div class="mb-3">
     <button class="btn btn-success" onclick="openPopup('einzahlung')">💰 Einzahlung</button>
     <button class="btn btn-danger" onclick="openPopup('auszahlung')">💸 Auszahlung</button>
