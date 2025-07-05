@@ -1,26 +1,15 @@
 [
-  {
-    "product_name": "galaxy A26",
-    "barcode": "817241420900",
-    "purchase_price": 360.0,
-    "selling_price": 500.0,
-    "min_selling_price": 450.0,
-    "quantity": 51,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin",
-    "name": "galaxy A26",
-    "price": 90.0
-  },
-  {
-    "product_name": "handy",
-    "barcode": "687333379573",
-    "purchase_price": 960.0,
-    "selling_price": 1300.0,
-    "min_selling_price": 1260.0,
-    "quantity": 1,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin"
-  }
+    {
+        "product_name": "galaxy A26",
+        "barcode": "817241420900",
+        "purchase_price": 360.0,
+        "selling_price": 500.0,
+        "min_selling_price": 450.0,
+        "quantity": 49,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "name": "galaxy A26",
+        "price": 90.0
+    }
 ]

@@ -1296,8 +1296,6 @@ def list_salary_payments():
     payments = payments[::-1]
     return render_template('list_salary_payments.html', payments=payments)
 
-
-
 # Kasse
 @app.route('/kasse', methods=['GET', 'POST'])
 @login_required(['admin', 'seller'])
@@ -1310,7 +1308,7 @@ def kasse():
     sales = []
     purchases = []
     
-    # Load kasse transactions
+    # Lade Transaktionen
     if os.path.exists(kasse_file):
         with open(kasse_file, 'r', encoding='utf-8') as f:
             try:
@@ -1318,7 +1316,7 @@ def kasse():
             except json.JSONDecodeError:
                 transactions = []
     
-    # Load sales data
+    # Lade Verkäufe
     if os.path.exists(sales_file):
         with open(sales_file, 'r', encoding='utf-8') as f:
             try:
@@ -1326,7 +1324,7 @@ def kasse():
             except json.JSONDecodeError:
                 sales = []
     
-    # Load purchase data
+    # Lade Bestellungen
     if os.path.exists(purchases_file):
         with open(purchases_file, 'r', encoding='utf-8') as f:
             try:
@@ -1334,26 +1332,26 @@ def kasse():
             except json.JSONDecodeError:
                 purchases = []
     
-    # Handle POST requests (add or delete transactions)
+    # POST: Löschen oder Hinzufügen
     if request.method == 'POST':
-        if 'delete_index' in request.form and session.get('role') == 'admin':
-            try:
-                delete_index = int(request.form['delete_index'])
-                if 0 <= delete_index < len(transactions):
-                    deleted = transactions.pop(delete_index)
-                    with open(kasse_file, 'w', encoding='utf-8') as f:
-                        json.dump(transactions, f, indent=2, ensure_ascii=False)
-                    flash(f"Eintrag gelöscht: {deleted.get('description', '')}", "success")
-                else:
-                    flash("Ungültiger Index", "danger")
-            except Exception as e:
-                flash(f"Fehler beim Löschen: {e}", "danger")
+        # Löschung nach delete_date (nur admin)
+        if 'delete_date' in request.form and session.get('role') == 'admin':
+            delete_date = request.form['delete_date']
+            original_len = len(transactions)
+            transactions = [t for t in transactions if t['date'] != delete_date]
+            if len(transactions) < original_len:
+                with open(kasse_file, 'w', encoding='utf-8') as f:
+                    json.dump(transactions, f, indent=2, ensure_ascii=False)
+                flash("Eintrag gelöscht.", "success")
+            else:
+                flash("Eintrag nicht gefunden.", "danger")
             return redirect(url_for('kasse'))
         
+        # Hinzufügen eines Eintrags
         try:
             amount = float(request.form['betrag'])
             description = request.form.get('beschreibung', '').strip()
-            ktype = request.form.get('typ')  # "einzahlung" or "auszahlung"
+            ktype = request.form.get('typ')  # "einzahlung" oder "auszahlung"
             if ktype not in ['einzahlung', 'auszahlung']:
                 raise ValueError("Ungültiger Typ")
             
@@ -1381,10 +1379,9 @@ def kasse():
         except Exception as e:
             flash(f"Fehler: {e}", "danger")
     
-    # Calculate current balance in kasse
+    # Berechnung Salden
     current_balance = sum(t.get('amount', 0) for t in transactions)
     
-    # Calculate today's sold total from sales.json
     today = datetime.now().date()
     total_sold_today = sum(
         s.get('total_price', 0)
@@ -1392,19 +1389,17 @@ def kasse():
         if 'date' in s and datetime.fromisoformat(s['date']).date() == today
     )
     
-    # Calculate today's total orders (expenses) from purchases.json
     total_orders_today = sum(
         p.get('total_price', 0)
         for p in purchases
         if 'date' in p and datetime.fromisoformat(p['date']).date() == today
     )
     
-    # Calculate total balance: kasse + today's sales - today's orders
     total_balance = current_balance + total_sold_today - total_orders_today
     
     return render_template(
         "kasse.html",
-        transactions=reversed(transactions),
+        transactions=reversed(transactions),  # Zeige neuste oben
         role=session.get('role'),
         current_balance=current_balance,
         total_sold_today=total_sold_today,
