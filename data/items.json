@@ -5,7 +5,7 @@
         "purchase_price": 360.0,
         "selling_price": 500.0,
         "min_selling_price": 450.0,
-        "quantity": 32,
+        "quantity": 29,
         "photo_link": "",
         "description": "",
         "seller": "admin",
@@ -71,7 +71,7 @@
         "purchase_price": 80.0,
         "selling_price": 80.0,
         "min_selling_price": 80.0,
-        "quantity": 1,
+        "quantity": 0,
         "photo_link": "",
         "description": "",
         "seller": "admin",
@@ -97,7 +97,7 @@
         "purchase_price": 35.0,
         "selling_price": 45.0,
         "min_selling_price": 45.0,
-        "quantity": 1,
+        "quantity": 100,
         "photo_link": "",
         "description": "",
         "seller": "admin",
@@ -116,5 +116,31 @@
         "seller": "admin",
         "name": "Iphone 14 Pro Max",
         "price": 1200.0
+    },
+    {
+        "product_name": "drgdfgdfg",
+        "barcode": "571499752213",
+        "purchase_price": 96.0,
+        "selling_price": 69.0,
+        "min_selling_price": 69.0,
+        "quantity": 0,
+        "photo_link": "",
+        "description": "",
+        "seller": "user",
+        "name": "drgdfgdfg",
+        "price": 69.0
+    },
+    {
+        "product_name": "1234567890123",
+        "barcode": "108162489420",
+        "purchase_price": 1234567890123.0,
+        "selling_price": 1234567890123.0,
+        "min_selling_price": 1234567890123.0,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "",
+        "seller": "user",
+        "name": "1234567890123",
+        "price": 1234567890123.0
     }
 ]

@@ -3,61 +3,100 @@
 {% block title %}Seller Dashboard - Verwaltungsplattform{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <h1 class="mb-3">Hallo, {{ seller.username }}!</h1>
-  <div class="user-info mb-4">Ihre Rolle: <strong>{{ seller.role }}</strong></div>
+<h1>Hallo, {{ session['username'] }}!</h1>
+<div class="user-info" style="margin-bottom: 20px;">Ihre Rolle: <strong>{{ session['role'] }}</strong></div>
 
-  <div class="mb-5">
-    <h2>Aktueller Kontostand (Wallet)</h2>
-    <p class="display-4 text-success fw-bold">€{{ total_income | round(2) }}</p>
+<div class="stats" style="display: flex; gap: 40px; margin-bottom: 25px; flex-wrap: wrap;">
+  <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
+    <h2>Tägliche Einnahmen</h2>
+    <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(daily_profit|default(0)) }}</p>
   </div>
 
-  <div class="d-flex gap-4 flex-wrap">
-    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
-      <h3>Tägliche Einnahmen</h3>
-      <p class="display-5 text-primary fw-semibold mb-0">€{{ daily_income | round(2) }}</p>
-    </div>
-    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
-      <h3>Gesamtverkäufe</h3>
-      <p class="display-5 text-secondary fw-semibold mb-0">{{ total_sales }}</p>
-    </div>
+  <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
+    <h2>Kasse</h2>
+    <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(total_balance|default(0)) }}</p>
   </div>
 
-  <div class="d-flex gap-4 flex-wrap mt-5">
-    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
-      <h3>Monatliche Einnahmen</h3>
-      {% for month, income in monthly_income.items() %}
-        <p>{{ month }}: €{{ income | round(2) }}</p>
-      {% endfor %}
-    </div>
-
-    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
-      <h3>Monatliche Ausgaben</h3>
-      {% for month, expense in monthly_expense.items() %}
-        <p>{{ month }}: €{{ expense | round(2) }}</p>
-      {% endfor %}
-    </div>
-
-    <div class="stat-box p-4 border rounded shadow-sm flex-fill text-center">
-      <h3>Monatlicher Gewinn (Netto)</h3>
-      {% for month, profit in monthly_profit.items() %}
-        <p>{{ month }}: €{{ profit | round(2) }}</p>
-      {% endfor %}
-    </div>
+  <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
+    <h2>Gesamt pro Monat</h2>
+    <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(monthly_profit|default(0)) }}</p>
   </div>
+</div>
 
-  <section class="mt-5">
-    <h2>Top verkaufte Artikel</h2>
-    <ul>
-      {% for item in top_items %}
-        <li>{{ item.name }}: {{ item.quantity }}</li>
-      {% endfor %}
-    </ul>
+<div style="display: flex; gap: 30px; flex-wrap: wrap;">
+
+  <!-- Sales Section -->
+  <section style="flex: 1; min-width: 320px; border: 2px solid #a8d5a2; padding: 18px; border-radius: 10px; background: #f0faf0; position: relative;">
+    <h2 style="color: #3a7d44; margin-bottom: 15px;">Verkäufe (Sales)</h2>
+
+    <div style="overflow-x: auto; margin-top: 8px; margin-bottom: 8px;">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+        <thead style="background-color: #d9ead3;">
+          <tr>
+            <th style="padding: 12px 15px; text-align: left;">Datum</th>
+            <th style="padding: 12px 15px; text-align: left;">Artikel</th>
+            <th style="padding: 12px 15px; text-align: center;">Menge</th>
+            <th style="padding: 12px 15px; text-align: right;">Preis pro Stück</th>
+            <th style="padding: 12px 15px; text-align: right;">Gesamtpreis</th>
+            <th style="padding: 12px 15px; text-align: right;">Gewinn</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for sale in sales %}
+          <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(168, 213, 162, 0.2);">
+            <td style="padding: 10px 15px;">{{ sale.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
+            <td style="padding: 10px 15px;">{{ sale.name or 'Unbekannt' }}</td>
+            <td style="padding: 10px 15px; text-align: center;">{{ sale.quantity or 0 }}</td>
+            <td style="padding: 10px 15px; text-align: right;">€{{ "{:,.2f}".format(sale.sale_price or 0) }}</td>
+            <td style="padding: 10px 15px; text-align: right;">€{{ "{:,.2f}".format(sale.total_price or 0) }}</td>
+            <td style="padding: 10px 15px; text-align: right; font-weight: bold; color: green;">€{{ "{:,.2f}".format(sale.profit or 0) }}</td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Verkaufsdaten vorhanden.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
   </section>
 
-  <section class="mt-5">
-    <h2>Weitere Funktionen</h2>
-    <p>Nutzen Sie das Navigationsmenü oben, um zu den Verkaufs-, Einkaufs- oder Lagerbestandsseiten zu gelangen.</p>
+  <!-- Purchases Section -->
+  <section style="flex: 1; min-width: 320px; border: 2px solid #e79a9a; padding: 18px; border-radius: 10px; background: #faf0f0; position: relative;">
+    <h2 style="color: #a83a3a; margin-bottom: 15px;">Einkäufe (Purchases)</h2>
+
+    <div style="overflow-x: auto; margin-top: 8px; margin-bottom: 8px;">
+      <table style="width: 100%; border-collapse: separate; border-spacing: 0 8px;">
+        <thead style="background-color: #f8d7da; color: #721c24;">
+          <tr>
+            <th style="padding: 12px 15px; text-align: left;">Datum</th>
+            <th style="padding: 12px 15px; text-align: left;">Artikel</th>
+            <th style="padding: 12px 15px; text-align: center;">Menge</th>
+            <th style="padding: 12px 15px; text-align: right;">Preis pro Stück</th>
+            <th style="padding: 12px 15px; text-align: right;">Gesamtpreis</th>
+          </tr>
+        </thead>
+        <tbody>
+     {% for purchase in purchases %}
+<tr>
+  <td style="padding: 10px 15px;">{{ purchase.date }}</td>
+  <td style="padding: 10px 15px;">{{ purchase.product_name }}</td>
+  <td style="padding: 10px 15px; text-align: center;">{{ purchase.quantity }}</td>
+  <td style="padding: 10px 15px; text-align: right;">€{{ "{:,.2f}".format(purchase.purchase_price or 0) }}</td>  {# <-- Here #}
+  <td style="padding: 10px 15px; text-align: right;">€{{ "{:,.2f}".format(purchase.total_price or 0) }}</td>
+</tr>
+{% else %}
+<tr>
+  <td colspan="5" style="text-align: center; padding: 20px; font-style: italic; color: #555;">
+    Keine Einkaufsdaten vorhanden.
+  </td>
+</tr>
+{% endfor %}
+
+        </tbody>
+      </table>
+    </div>
   </section>
+
 </div>
 {% endblock %}

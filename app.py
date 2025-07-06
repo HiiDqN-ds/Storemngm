@@ -430,88 +430,66 @@ def download_purchases_csv():
     return generate_csv(purchases, fieldnames)
 
 
-# Seller Dashboard
 @app.route('/seller')
 @login_required('seller')
 def seller_dashboard():
     username = session['username']
-    sales = load_sales()  # Your function to load all sales
-    users = load_users()  # Your function to load users
-    items = load_items()  # Your function to load items
 
-    # Get this seller's info
-    seller = next((u for u in users if u['username'] == username), None)
+    sales_data = load_sales()    # loads list of orders, each with 'items' list
+    purchases_data = load_purchases()  # load purchases similarly
 
-    # Filter sales by this seller
-    user_sales = [s for s in sales if s.get('seller') == username]
+    # Flatten sales: get only sales for this user and flatten items
+    flat_sales = []
+    for order in sales_data:
+        if order.get('user') != username:
+            continue
+        order_date = order.get('date')
+        for item in order.get('items', []):
+            profit = (item.get('sale_price', 0) - item.get('purchase_price', 0)) * item.get('quantity', 0)
+            flat_sales.append({
+                'date': datetime.fromisoformat(order_date) if order_date else None,
+                'name': item.get('product_name', 'Unbekannt'),
+                'quantity': item.get('quantity', 0),
+                'sale_price': item.get('sale_price', 0),
+                'total_price': item.get('total_price', 0),
+                'profit': profit
+            })
 
-    # Helper function to get total sale amount for a sale record
-    def get_sale_amount(sale):
-        return sale.get('total_price') or (sale.get('sale_price', 0) * sale.get('quantity', 0))
+    # Prepare purchases similarly (depending on your purchases data structure)
+    flat_purchases = []
+    for p in purchases_data:
+        if p.get('user') != username:
+            continue
+        p_date = p.get('date')
+        flat_purchases.append({
+            'date': datetime.fromisoformat(p_date) if p_date else None,
+            'product_name': p.get('product_name', 'Unbekannt'),
+            'quantity': p.get('quantity', 0),
+            'purchase_price': p.get('price', 0),
+            'total_price': p.get('total_price', 0),
+        })
 
-    # Calculate daily income (today)
+    # Example daily profit (sum of profits for today)
     today = datetime.now().date()
-    daily_sales = [s for s in user_sales if datetime.fromisoformat(s['date']).date() == today]
-    daily_income = sum(get_sale_amount(s) for s in daily_sales)
+    daily_profit = sum(
+        s['profit'] for s in flat_sales
+        if s['date'] and s['date'].date() == today
+    )
 
-    # Total income from all sales
-    total_income = sum(get_sale_amount(s) for s in user_sales)
+    # Example total balance (sum of profits minus sum of purchase costs)
+    total_profit = sum(s['profit'] for s in flat_sales)
+    total_purchase_cost = sum(p['purchase_price'] * p['quantity'] for p in flat_purchases)
+    total_balance = total_profit - total_purchase_cost
 
-    # Initialize monthly stats (last 6 months)
-    now = datetime.now()
-    monthly_income = defaultdict(float)
-    monthly_expense = defaultdict(float)  # Adjust if you track expenses per sale
-    monthly_profit = defaultdict(float)
-
-    for i in range(6):
-        month_key = (now - timedelta(days=30 * i)).strftime('%Y-%m')
-        monthly_income[month_key] = 0.0
-        monthly_expense[month_key] = 0.0
-        monthly_profit[month_key] = 0.0
-
-    # Calculate monthly income, expenses, and profit
-    for sale in user_sales:
-        sale_month = datetime.fromisoformat(sale['date']).strftime('%Y-%m')
-        if sale_month in monthly_income:
-            amount = get_sale_amount(sale)
-            monthly_income[sale_month] += amount
-
-            # Example expense calculation (if available)
-            expense = sale.get('cost_price', 0) * sale.get('quantity', 0)
-            monthly_expense[sale_month] += expense
-
-            monthly_profit[sale_month] += amount - expense
-
-    # Convert defaultdicts to regular dicts before sending to template
-    monthly_income = dict(monthly_income)
-    monthly_expense = dict(monthly_expense)
-    monthly_profit = dict(monthly_profit)
-
-    # Calculate total sales count
-    total_sales = len(user_sales)
-
-    # Calculate top 5 sold items for this seller
-    item_counter = defaultdict(int)
-    for sale in user_sales:
-        item_counter[sale['barcode']] += sale.get('quantity', 1)
-
-    top_items = sorted(item_counter.items(), key=lambda x: x[1], reverse=True)[:5]
-
-    # Get item names for top sold items
-    top_items_detail = [{
-        'name': next((i.get('name', i.get('product_name', 'Unbenannt')) for i in items if i.get('barcode') == barcode), barcode),
-        'quantity': qty
-    } for barcode, qty in top_items]
+    # Example monthly profit sum
+    monthly_profit = sum(s['profit'] for s in flat_sales)  # You can enhance by grouping by month if you want
 
     return render_template(
-        "seller_dashboard.html",
-        seller=seller,
-        daily_income=daily_income,
-        total_income=total_income,
-        total_sales=total_sales,
-        top_items=top_items_detail,
-        monthly_income=monthly_income,
-        monthly_expense=monthly_expense,
+        'seller_dashboard.html',
+        sales=flat_sales,
+        purchases=flat_purchases,
+        daily_profit=daily_profit,
+        total_balance=total_balance,
         monthly_profit=monthly_profit
     )
 
@@ -940,51 +918,21 @@ def sell_item():
 
 
 # Seller: Seller History
-@app.route('/seller/sales', methods=['GET', 'POST'])
+@app.route('/seller/sales')
 @login_required('seller')
 def seller_sales():
-    sales = load_sales()
-    username = session['username']
-
-    # Filter sales nur vom angemeldeten Verkäufer
-    user_sales = [s for s in sales if s['seller'] == username]
-
-    if request.method == 'POST':
-        sale_id = request.form.get('sale_id')
-        new_quantity = request.form.get('quantity')
-        new_price = request.form.get('sale_price')
-
-        if not sale_id or not new_quantity or not new_price:
-            flash("Alle Felder sind erforderlich.", "danger")
-            return redirect(url_for('seller_sales'))
-
-        try:
-            sale_id = int(sale_id)
-            new_quantity = int(new_quantity)
-            new_price = float(new_price)
-            if new_quantity <= 0 or new_price <= 0:
-                raise ValueError
-        except ValueError:
-            flash("Bitte gültige Zahlen für Menge und Preis eingeben.", "danger")
-            return redirect(url_for('seller_sales'))
-
-        sale = next((s for s in sales if s['id'] == sale_id and s['seller'] == username), None)
-        if not sale:
-            flash("Verkauf nicht gefunden oder kein Zugriff.", "danger")
-            return redirect(url_for('seller_sales'))
-
-        sale['quantity'] = new_quantity
-        sale['sale_price'] = new_price
-        sale['total_price'] = round(new_quantity * new_price, 2)
-        sale['date'] = datetime.now().isoformat()
-
-        save_sales(sales)
-        flash("Verkauf erfolgreich aktualisiert.", "success")
-        return redirect(url_for('seller_sales'))
-
-    user_sales = user_sales[::-1]
+    username = session.get('username', '').lower()
+    
+    # Load all sales (replace with your actual function)
+    sales = load_sales()  # returns a list of sale dicts
+    
+    # Filter sales by matching user/seller - using .get() to avoid KeyError
+    user_sales = [s for s in sales if s.get('user', '').lower() == username]
+    
+    # Optional: sort by date descending (if your sales have a 'date' field)
+    user_sales.sort(key=lambda s: s.get('date', ''), reverse=True)
+    
     return render_template('seller_sales.html', sales=user_sales)
-
 
 # Salary Payment
 @app.route('/admin/pay-salary', methods=['GET', 'POST'])

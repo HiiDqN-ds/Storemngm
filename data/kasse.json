@@ -1,16 +1,23 @@
 [
   {
-    "date": "2025-07-06T06:58:06.373409",
+    "date": "2025-07-06T08:10:27.450011",
     "amount": 500.0,
     "type": "einzahlung",
-    "description": "start",
-    "user": "admin"
+    "description": "999",
+    "user": "user"
   },
   {
-    "date": "2025-07-06T07:07:47.220264",
+    "date": "2025-07-06T08:12:11.088377",
+    "amount": -500.0,
+    "type": "auszahlung",
+    "description": "542",
+    "user": "user"
+  },
+  {
+    "date": "2025-07-06T08:12:26.048251",
     "amount": 100.0,
     "type": "einzahlung",
-    "description": "test2",
-    "user": "admin"
+    "description": "848",
+    "user": "user"
   }
 ]

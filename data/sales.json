@@ -1,8 +1,8 @@
 [
     {
-        "order_id": "25cde070-1b1a-405f-bda0-69c7df68fe2b",
-        "user": "admin",
-        "date": "2025-07-06T06:58:28.844217",
+        "order_id": "2801e331-0e1e-4883-81e4-8f758b327927",
+        "user": "user",
+        "date": "2025-07-06T08:15:43.664356",
         "items": [
             {
                 "barcode": "817241420900",
@@ -13,6 +13,6 @@
                 "purchase_price": 360.0
             }
         ],
-        "total_order_price": 635.0
+        "total_order_price": 500.0
     }
 ]
