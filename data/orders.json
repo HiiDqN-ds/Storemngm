@@ -13,5 +13,20 @@
     "user": "user",
     "barcode": "barcodes/code_barres_570771513976",
     "photo": ""
+  },
+  {
+    "order_number": "354586950590",
+    "product_name": "sdfsdf",
+    "ref_number": "",
+    "description": "",
+    "price": 90.0,
+    "selling_price": 90.0,
+    "min_selling_price": 90.0,
+    "quantity": 1,
+    "total_price": 90.0,
+    "date": "2025-07-06",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_354586950590",
+    "photo": ""
   }
 ]

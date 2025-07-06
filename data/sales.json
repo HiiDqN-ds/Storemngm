@@ -1,21 +1,5 @@
 [
     {
-        "order_id": "c7cdf7fc-ea44-4c64-97b7-cda1a5a3f388",
-        "user": "admin",
-        "date": "2025-07-06T09:45:47.836187",
-        "items": [
-            {
-                "barcode": "892880710579",
-                "product_name": "handy",
-                "quantity": 1,
-                "sale_price": 190.0,
-                "total_price": 190.0,
-                "purchase_price": 160.0
-            }
-        ],
-        "total_order_price": 190.0
-    },
-    {
         "order_id": "5b1cbd43-f28a-4d64-9921-4a147014647e",
         "user": "admin",
         "date": "2025-07-06T10:01:23.844369",
@@ -46,5 +30,21 @@
             }
         ],
         "total_order_price": 350.0
+    },
+    {
+        "order_id": "3d21dbf3-abea-42d9-b561-4e371ebf2222",
+        "user": "admin",
+        "date": "2025-07-06T15:09:40.878552",
+        "items": [
+            {
+                "barcode": "892880710579",
+                "product_name": "handy",
+                "quantity": 1,
+                "sale_price": 190.0,
+                "total_price": 190.0,
+                "purchase_price": 160.0
+            }
+        ],
+        "total_order_price": 190.0
     }
 ]

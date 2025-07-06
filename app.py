@@ -1,17 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, Response
 from werkzeug.security import generate_password_hash, check_password_hash
-import json
-import os
+import json, uuid, io, os, random, barcode
 from datetime import datetime, timedelta
-from collections import defaultdict
-import random
-import barcode
 from barcode.writer import ImageWriter
-from collections import defaultdict
 from flask import jsonify,send_file
-import uuid
-import glob
-import io
+from functools import wraps
+
 
 app = Flask(__name__)
 app.secret_key = 'secret'  # Set a strong secret key for production
@@ -24,6 +18,7 @@ SALES_FILE = os.path.join(DATA_PATH, 'sales.json')
 ORDERS_FILE = os.path.join(DATA_PATH, 'orders.json')
 PAYMENTS_FILE = os.path.join(DATA_PATH, 'salary_payments.json')
 ALERTS_DISMISS_FILE = os.path.join(DATA_PATH, 'dismissed_alerts.json')
+
 # Helper to load JSON file
 def load_json(file_path):
     if not os.path.exists(file_path):
@@ -61,7 +56,6 @@ def load_sales():
 def save_sales(sales):
     save_json(SALES_FILE, sales)
 
-
 # Find user by username
 def find_user(username):
     users = load_users()
@@ -69,7 +63,8 @@ def find_user(username):
         if user['username'] == username:
             return user
     return None
-from functools import wraps
+
+# Login_required
 def login_required(roles=None):
     if not isinstance(roles, (list, tuple)):
         roles = [roles] if roles else []
@@ -88,7 +83,6 @@ def login_required(roles=None):
     return decorator
 
 # ROUTES
-
 @app.route('/')
 def index():
     if 'username' in session:
@@ -124,7 +118,6 @@ def logout():
     flash('Logged out', 'success')
     return redirect(url_for('login'))
 
-
 # load_sales   
 def load_sales():
     with open(SALES_FILE, 'r') as f:
@@ -136,7 +129,6 @@ def load_purchases():
         return json.load(f)
 
 # Date Time Format 
-from datetime import datetime
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%d.%m.%Y %H:%M'):
     if not value:
@@ -147,10 +139,7 @@ def datetimeformat(value, format='%d.%m.%Y %H:%M'):
     except Exception:
         return value
 
-
-
-
-
+# calculate_all_time_profit
 def calculate_all_time_profit(sales, items):
     barcode_map = {item['barcode']: item.get('purchase_price', 0) for item in items}
     profit = 0.0
@@ -162,6 +151,7 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
+# Notifications
 @app.route('/admin/notifications')
 @login_required('admin')
 def admin_notifications():
@@ -171,7 +161,7 @@ def admin_notifications():
     
     return render_template("admin_notifications.html", mailbox_notifications=mailbox_notifications)
 
-
+# Admin Dashboard
 @app.route('/admin')
 @login_required('admin')
 def admin_dashboard():
@@ -303,11 +293,9 @@ def load_kasse_balance():
                 pass
     return sum(t.get('amount', 0) for t in transactions)
 
-
-
+# Format_currency_de
 def format_currency_de(amount):
     return f"€{amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
 
 # Set_wallet_balance
 @app.route('/set_wallet_balance', methods=['POST'])
@@ -430,12 +418,7 @@ def download_purchases_csv():
     fieldnames = ['date', 'product_name', 'quantity', 'price', 'total_price']
     return generate_csv(purchases, fieldnames)
 
-
-from flask import session, render_template
-from datetime import datetime
-
-from datetime import datetime
-
+# Seller_dashboard
 @app.route('/seller')
 @login_required('seller')
 def seller_dashboard():
@@ -505,12 +488,6 @@ def seller_dashboard():
         daily_sales_total=daily_sales_total,
         daily_purchases_total=daily_purchases_total,
     )
-
-
-
-
-
-
 
 # Admin: List Sellers
 @app.route('/admin/sellers')
@@ -598,7 +575,6 @@ def edit_seller(username):
 
     return render_template('edit_seller.html', seller=seller)
 
-
 # Admin: Delete Seller
 @app.route('/admin/sellers/delete/<username>', methods=['POST'])
 @login_required('admin')
@@ -635,8 +611,7 @@ def list_items():
         item['description'] = item.get('description', '')
         item['photo_link'] = item.get('image_url', '')
 
-    return render_template('items.html',  items=items[::-1])
-
+    return render_template('items.html',  items=items)
 
 # Admin: List Items to Edit
 @app.route('/admin/items/barcode_print/<barcode_value>')
@@ -654,8 +629,6 @@ def barcode_print(barcode_value):
         mimetype='image/png',
         as_attachment=False  # open inline
     )
-
-
 
 @app.route('/admin/sales')
 def admin_sales():
@@ -677,9 +650,8 @@ def admin_sales():
                 'quantity': item.get('quantity'),
                 'sale_price': item.get('sale_price'),
             })
-
-    return render_template('admin_sales.html', sales=flattened_sales)
-
+    
+    return render_template('admin_sales.html', sales=flattened_sales[::-1])
 
 @app.route('/admin/sales/edit/<order_id>/<barcode>', methods=['GET', 'POST'])
 def edit_sale(order_id, barcode):
@@ -709,7 +681,6 @@ def edit_sale(order_id, barcode):
             flash(f'Fehler beim Speichern: {e}', 'danger')
 
     return render_template('edit_sale.html', order_id=order_id, barcode=barcode, sale=item)
-
 
 @app.route('/admin/sales/delete/<order_id>/<barcode>', methods=['POST'])
 def delete_sale(order_id, barcode):
@@ -1250,7 +1221,7 @@ def list_orders():
         if match_user and match_date:
             filtered_orders.append(order)
 
-    return render_template('list_orders.html', orders=filtered_orders, users=users)
+    return render_template('list_orders.html', orders=filtered_orders[::-1], users=users)
 
 
 def load_orders():
@@ -1266,7 +1237,6 @@ def save_orders(orders):
         json.dump(orders, f, indent=4, ensure_ascii=False)
 
 # Orders CRUD
-# Edit Route
 # Edit Route
 @app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
 def edit_order(index):
