@@ -5,12 +5,13 @@
 {% block content %}
 <h2>Gesamter Verkaufsverlauf</h2>
 
-<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
+<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Verkäufer oder Barcode..." onkeyup="filterTable()">
 
 <table class="table table-bordered align-middle">
   <thead class="table-light">
     <tr>
       <th>Verkäufer</th>
+      <th>Produktname</th>
       <th>Artikel Barcode</th>
       <th>Menge</th>
       <th>Verkaufspreis (€)</th>
@@ -21,11 +22,12 @@
   <tbody>
     {% for sale in sales %}
     <tr>
-      <td>{{ sale['seller'] }}</td>
-      <td>{{ sale['barcode'] }}</td>
-      <td>{{ sale['quantity'] }}</td>
-      <td>{{ "%.2f"|format(sale['sale_price']) }}</td>
-      <td>{{ sale['date'] }}</td>
+      <td>{{ sale.seller }}</td>
+      <td>{{ sale.item_name }}</td>
+      <td>{{ sale.barcode }}</td>
+      <td>{{ sale.quantity }}</td>
+      <td>{{ "%.2f"|format(sale.sale_price) }}</td>
+      <td>{{ sale.date.replace("T", " ")[:19] }}</td>
       <td class="d-flex gap-1 flex-wrap">
 
         <!-- Quittung Button -->
@@ -33,27 +35,25 @@
           <i class="bi bi-receipt"></i>
         </button>
 
-        <!-- Bearbeiten Button -->
-        <a href="{{ url_for('edit_sale', index=loop.index0) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
-          <i class="bi bi-pencil-square"></i>
-        </a>
+        <a href="{{ url_for('edit_sale', order_id=sale.order_id, barcode=sale.barcode) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
+  <i class="bi bi-pencil-square"></i>
+</a>
 
-        <!-- Löschen Button -->
-        <form method="post" action="{{ url_for('delete_sale', index=loop.index0) }}" onsubmit="return confirm('Verkauf wirklich löschen?')">
-          <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
-            <i class="bi bi-trash"></i>
-          </button>
-        </form>
+<form method="post" action="{{ url_for('delete_sale', order_id=sale.order_id, barcode=sale.barcode) }}" onsubmit="return confirm('Verkauf wirklich löschen?')">
+  <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
+    <i class="bi bi-trash"></i>
+  </button>
+</form>
 
       </td>
     </tr>
     {% else %}
-    <tr><td colspan="6">Keine Verkäufe gefunden.</td></tr>
+    <tr><td colspan="7">Keine Verkäufe gefunden.</td></tr>
     {% endfor %}
   </tbody>
 </table>
 
-<!-- html2pdf für Quittung -->
+<!-- html2pdf for receipt -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
@@ -130,7 +130,7 @@
 
     rows.forEach(row => {
       const seller = row.cells[0].textContent.toLowerCase();
-      const barcode = row.cells[1].textContent.toLowerCase();
+      const barcode = row.cells[2].textContent.toLowerCase();
       row.style.display = seller.includes(filter) || barcode.includes(filter) ? "" : "none";
     });
   }

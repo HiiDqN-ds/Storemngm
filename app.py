@@ -9,6 +9,7 @@ import barcode
 from barcode.writer import ImageWriter
 from collections import defaultdict
 from flask import jsonify
+import uuid
 
 app = Flask(__name__)
 app.secret_key = 'secret'  # Set a strong secret key for production
@@ -157,26 +158,44 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
+from flask import render_template
+from datetime import datetime, timedelta
+
 @app.route('/admin')
 @login_required('admin')
 def admin_dashboard():
     now = datetime.now()
     today = now.date()
 
-    # Daten laden
-    sales = load_sales()
+    # Load data
+    sales = load_sales()          # sales = list of orders, each has 'items' list
     purchases = load_purchases()
     items = load_items()
 
-    # Datumsformatierung für Sales
+    # Parse sale dates & calculate profit per item and total profit per sale
     for sale in sales:
+        # Parse sale date
         if isinstance(sale.get('date'), str):
             try:
                 sale['date'] = datetime.fromisoformat(sale['date'])
             except Exception:
                 sale['date'] = datetime.min
 
-    # Datumsformatierung für Purchases
+        # Calculate profit per item and accumulate total profit of the sale
+        total_profit_per_sale = 0
+        for item in sale.get('items', []):
+            try:
+                purchase_price = float(item.get('purchase_price', 0))
+                sale_price = float(item.get('sale_price', 0))
+                quantity = int(item.get('quantity', 0))
+                profit = (sale_price - purchase_price) * quantity
+                item['profit'] = round(profit, 2)
+                total_profit_per_sale += profit
+            except Exception:
+                item['profit'] = 0
+        sale['total_profit'] = round(total_profit_per_sale, 2)
+
+    # Parse purchase dates
     for purchase in purchases:
         if isinstance(purchase.get('date'), str):
             try:
@@ -184,51 +203,47 @@ def admin_dashboard():
             except Exception:
                 purchase['date'] = datetime.min
 
-    # Gewinnberechnung pro Verkauf & Gesamtgewinn
-    all_time_profit = 0
-    for s in sales:
-        try:
-            purchase_price = float(s.get('purchase_price', 0))
-            sale_price = float(s.get('sale_price', 0))
-            quantity = int(s.get('quantity', 0))
-            profit = (sale_price - purchase_price) * quantity
-            s['profit'] = round(profit, 2)
-            all_time_profit += profit
-        except Exception:
-            s['profit'] = 0
+    # Calculate all-time profit (sum of all item profits)
+    all_time_profit = sum(
+        item['profit']
+        for sale in sales
+        for item in sale.get('items', [])
+    )
     all_time_profit = round(all_time_profit, 2)
 
-    # Tages- und Monatswerte
+    # Calculate daily sales total and daily purchases total
     daily_sales_total = sum(
-        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
-        for s in sales if s['date'].date() == today
+        item.get('total_price', 0)
+        for sale in sales if sale['date'].date() == today
+        for item in sale.get('items', [])
     )
     daily_purchases_total = sum(
-        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
+        p.get('total_price', 0)
         for p in purchases if p['date'].date() == today
     )
     daily_profit = round(daily_sales_total - daily_purchases_total, 2)
 
+    # Calculate monthly sales and purchases total
     monthly_sales = sum(
-        s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
-        for s in sales if s['date'].year == now.year and s['date'].month == now.month
+        item.get('total_price', 0)
+        for sale in sales if sale['date'].year == now.year and sale['date'].month == now.month
+        for item in sale.get('items', [])
     )
     monthly_purchases = sum(
-        p.get('total_price', p.get('buy_price', 0) * p.get('quantity', 0))
+        p.get('total_price', 0)
         for p in purchases if p['date'].year == now.year and p['date'].month == now.month
     )
     monthly_profit = round(monthly_sales - monthly_purchases, 2)
 
-    # Sortierung
+    # Sort sales and purchases by date descending
     sales_sorted = sorted(sales, key=lambda x: x['date'], reverse=True)
     purchases_sorted = sorted(purchases, key=lambda x: x['date'], reverse=True)
 
-    # Wallet (Kasse)
+    # Load wallet (kasse) balance
     kasse_balance = load_kasse_balance()
     total_balance = round(kasse_balance + daily_sales_total - daily_purchases_total, 2)
 
-    # ⚠️ Benachrichtigungen für Artikel über 21 Tage
-    dismissed_alerts = load_json(ALERTS_DISMISS_FILE)
+    # Generate notifications for items older than 17 days
     alert_threshold = now - timedelta(days=17)
     notifications = []
     for item in items:
@@ -239,7 +254,6 @@ def admin_dashboard():
             item_date = datetime.fromisoformat(item_date_str)
         except Exception:
             continue
-
         if item_date < alert_threshold:
             notifications.append({
                 "type": "warning",
@@ -258,6 +272,7 @@ def admin_dashboard():
         purchases=purchases_sorted,
         notifications=notifications
     )
+
 
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%d.%m.%Y %H:%M'):
@@ -522,8 +537,7 @@ def add_seller():
         username = request.form['username']
         password = request.form['password']
         profile_img = request.form.get('profile_img', '')
-        salary_str = request.form.get('salary', '').strip()
-        salary = float(salary_str) if salary_str else 0.0
+        salary = float(request.form.get('salary', 0.0))
         activated = 'activated' in request.form
 
         sellers = load_users()
@@ -629,26 +643,89 @@ def barcode_print(barcode_value):
         mimetype='image/png',
         as_attachment=False  # open inline
     )
-# Admin: List selled Items
+
+
+
 @app.route('/admin/sales')
-@login_required('admin')
 def admin_sales():
+    all_orders = load_sales()
+    flattened_sales = []
+
+    for order in all_orders:
+        order_id = order.get('order_id')
+        user = order.get('user')
+        date = order.get('date')
+        items = order.get('items', [])
+        for item in items:
+            flattened_sales.append({
+                'order_id': order_id,
+                'seller': user,
+                'date': date,
+                'barcode': item.get('barcode'),
+                'item_name': item.get('product_name'),
+                'quantity': item.get('quantity'),
+                'sale_price': item.get('sale_price'),
+            })
+
+    return render_template('admin_sales.html', sales=flattened_sales)
+
+
+@app.route('/admin/sales/edit/<order_id>/<barcode>', methods=['GET', 'POST'])
+def edit_sale(order_id, barcode):
     sales = load_sales()
-    items = load_items()
-    users = load_users()
 
-    # Optional: enrich sales with item name and seller name for better display
-    for sale in sales:
-        sale['item_name'] = next((
-        i.get('product_name') or i.get('name') or 'Unnamed'
-        for i in items
-        if i.get('barcode') == sale.get('barcode')
-    ), 'Unknown Item')
+    # Suche Order mit order_id
+    order = next((o for o in sales if o['order_id'] == order_id), None)
+    if not order:
+        flash('Bestellung nicht gefunden', 'danger')
+        return redirect(url_for('admin_sales'))
 
-        sale['seller_name'] = sale.get('seller', 'Unknown')
-    sales = sales[::-1]
-    return render_template('admin_sales.html', sales=sales)
+    # Suche Artikel mit Barcode in dieser Order
+    item = next((i for i in order.get('items', []) if i['barcode'] == barcode), None)
+    if not item:
+        flash('Artikel nicht gefunden', 'danger')
+        return redirect(url_for('admin_sales'))
 
+    if request.method == 'POST':
+        try:
+            item['quantity'] = int(request.form['quantity'])
+            item['sale_price'] = float(request.form['sale_price'])
+            # evtl. weitere Felder anpassen
+            save_sales(sales)
+            flash('Verkauf erfolgreich aktualisiert', 'success')
+            return redirect(url_for('admin_sales'))
+        except Exception as e:
+            flash(f'Fehler beim Speichern: {e}', 'danger')
+
+    return render_template('edit_sale.html', order_id=order_id, barcode=barcode, sale=item)
+
+
+@app.route('/admin/sales/delete/<order_id>/<barcode>', methods=['POST'])
+def delete_sale(order_id, barcode):
+    sales = load_sales()
+    order = next((o for o in sales if o['order_id'] == order_id), None)
+    if not order:
+        flash('Bestellung nicht gefunden', 'danger')
+        return redirect(url_for('admin_sales'))
+
+    items = order.get('items', [])
+    item = next((i for i in items if i['barcode'] == barcode), None)
+    if not item:
+        flash('Artikel nicht gefunden', 'danger')
+        return redirect(url_for('admin_sales'))
+
+    items.remove(item)
+
+    # Optional: Wenn nach Entfernen keine Items mehr in Order, dann auch Order entfernen
+    if len(items) == 0:
+        sales.remove(order)
+
+    save_sales(sales)
+    flash(f"Verkauf von {item['quantity']} × {item.get('product_name', 'Artikel')} gelöscht.", 'warning')
+    return redirect(url_for('admin_sales'))
+
+
+# Add Item
 @app.route('/admin/add_item', methods=['GET', 'POST'])
 @login_required('admin')
 def add_item():
@@ -738,47 +815,9 @@ def delete_item(barcode):
     flash('Item deleted', 'success')
     return redirect(url_for('list_items'))
 
-# Admim 🗑️ Delete Sale
-@app.route('/admin/sales/delete/<int:index>', methods=['POST'])
-@login_required('admin')
-def delete_sale(index):
-    sales = load_sales()
-    if 0 <= index < len(sales):
-        deleted_sale = sales.pop(index)
-        save_sales(sales)
-        flash(f"🗑️ Verkauf von {deleted_sale['quantity']} × {deleted_sale.get('barcode', 'unbekannt')} gelöscht.", "warning")
-    else:
-        flash("❌ Ungültiger Eintrag.", "danger")
-    return redirect(url_for('admin_sales'))
-
- 
-# Admin ✏️ Update Sale
-@app.route('/admin/sales/edit/<int:index>', methods=['GET', 'POST'])
-@login_required('admin')
-def edit_sale(index):
-    sales = load_sales()
-    if not (0 <= index < len(sales)):
-        flash("❌ Verkauf nicht gefunden.", "danger")
-        return redirect(url_for('admin_sales'))
-
-    sale = sales[index]
-
-    if request.method == 'POST':
-        try:
-            sale['quantity'] = int(request.form['quantity'])
-            sale['sale_price'] = float(request.form['sale_price'])
-            sale['total_price'] = round(sale['quantity'] * sale['sale_price'], 2)
-            save_sales(sales)
-            flash("✅ Verkauf aktualisiert.", "success")
-        except Exception as e:
-            flash(f"❌ Fehler beim Aktualisieren: {str(e)}", "danger")
-        return redirect(url_for('admin_sales'))
-
-    return render_template('edit_sale.html', sale=sale, index=index)
 
 
 
-# Seller Dashboard
 @app.route('/sell', methods=['GET', 'POST'])
 def sell_item():
     # Access control: only admin or seller can sell
@@ -789,14 +828,17 @@ def sell_item():
     items = load_items()
 
     if request.method == 'POST':
-        # Get all form indices: items[0][barcode], items[1][quantity], etc.
+        # Collect all indices from form
         indices = {
             key.split('[')[1].split(']')[0]
             for key in request.form if key.startswith('items[')
         }
         indices = sorted(indices, key=int)
 
-        sales = load_sales()  # Load once before loop
+        sales = load_sales()  # Load existing sales/orders
+
+        order_items = []
+        total_order_price = 0.0
 
         for idx in indices:
             barcode = request.form.get(f'items[{idx}][barcode]', '').strip()
@@ -828,7 +870,7 @@ def sell_item():
                 flash(f"❌ Nicht genug Bestand für Produkt {item.get('name', 'Produkt')}. Nur noch {item.get('quantity', 0)} verfügbar.", 'danger')
                 return redirect(url_for('sell_item'))
 
-            # Get sale price
+            # Determine sale price
             if discount_active:
                 try:
                     sale_price = float(price_input)
@@ -846,42 +888,55 @@ def sell_item():
                     flash(f"❌ Das Produkt {item.get('name', 'Produkt')} hat einen ungültigen Preis.", 'danger')
                     return redirect(url_for('sell_item'))
 
-            # Reduce stock
-            item['quantity'] -= quantity
-            purchase_price = item.get('purchase_price', 0)
-            # Append sale with item name
-            sales.append({
-            'seller': session['username'],
-            'barcode': barcode,
-            'name': item.get('product_name') or item.get('name') or 'Unbenannt',
-            'quantity': quantity,
-            'sale_price': sale_price,
-            'purchase_price': purchase_price,
-            'total_price': round(sale_price * quantity, 2),
-            'date': datetime.now().isoformat()
-        })
+            # Calculate total price for this item
+            total_price = round(sale_price * quantity, 2)
+            total_order_price += total_price
 
+            # Add item to order_items list
+            order_items.append({
+                'barcode': barcode,
+                'product_name': item.get('product_name') or item.get('name') or 'Unbenannt',
+                'quantity': quantity,
+                'sale_price': sale_price,
+                'total_price': total_price,
+                'purchase_price': item.get('purchase_price', 0)
+            })
+
+            # Reduce stock quantity
+            item['quantity'] -= quantity
+
+            # Flash success per item
             product_name = item.get("product_name") or item.get("name") or "Produkt"
             flash(f'✅ Verkauf von {quantity} × {product_name} erfolgreich.', 'success')
 
-
             # Low stock warning
             if item.get('quantity', 0) <= 5:
-                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {item.get("name", "Produkt")} auf Lager!', 'warning')
+                flash(f'⚠️ Achtung: Nur noch {item.get("quantity", 0)} Stück von {product_name} auf Lager!', 'warning')
 
-        # Save everything once
+        # Create a single order object with all items
+        new_order = {
+            "order_id": str(uuid.uuid4()),
+            "user": session['username'],
+            "date": datetime.now().isoformat(),
+            "items": order_items,
+            "total_order_price": round(total_order_price, 2)
+        }
+
+        # Append the new order
+        sales.append(new_order)
+
+        # Save updated sales and items
         save_sales(sales)
         save_items(items)
 
-        # Redirect to appropriate dashboard
+        # Redirect based on role
         if session.get('role') == 'admin':
             return redirect(url_for('admin_dashboard'))
         else:
             return redirect(url_for('seller_dashboard'))
 
-    # GET: render form
+    # GET: render the sell form
     return render_template('sell_item.html', items=items)
-
 
 
 # Seller: Seller History
@@ -1156,124 +1211,81 @@ def seller_items():
 # List all the Orders
 @app.route('/orders')
 def list_orders():
-    # Use cross-platform path to the orders file
-    order_file = os.path.join(os.path.dirname(__file__), 'data', 'orders.json')
-    print(f"Looking for orders file at: {order_file}")  # Debug line (visible in Render logs)
+    orders = load_orders()
+    users = sorted(set(order['user'] for order in orders if 'user' in order))
 
-    # Role-based access check
-    if session.get('role') not in ['admin', 'seller']:
-        flash('Zugriff verweigert.', 'danger')
-        return redirect(url_for('index'))
+    # Filter by user and date from query parameters
+    user_filter = request.args.get('user')
+    date_filter = request.args.get('date')  # expects 'YYYY-MM-DD'
 
-    # Load orders from file
-    orders = []
-    if os.path.exists(order_file):
-        try:
-            with open(order_file, 'r', encoding='utf-8') as f:
-                orders = json.load(f)
-        except json.JSONDecodeError:
-            print("JSON decode error in orders.json")
-            orders = []
-    else:
-        print("orders.json file not found")
+    filtered_orders = []
+    for order in orders:
+        match_user = (not user_filter) or (order.get('user') == user_filter)
+        match_date = (not date_filter) or order.get('date', '').startswith(date_filter)
+        if match_user and match_date:
+            filtered_orders.append(order)
 
-    # Optional filtering from query parameters
-    user_filter = request.args.get('user', '')
-    date_filter = request.args.get('date', '')
-
-    if user_filter:
-        orders = [o for o in orders if o.get('user') == user_filter]
-
-    if date_filter:
-        orders = [o for o in orders if o.get('date') == date_filter]
-
-    # Get unique users for dropdown
-    unique_users = sorted(set(o.get('user') for o in orders if 'user' in o))
-    orders = orders[::-1]
-    return render_template('list_orders.html', orders=orders, users=unique_users)
+    return render_template('list_orders.html', orders=filtered_orders, users=users)
 
 
+def load_orders():
+    try:
+        with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return []
 
 
+def save_orders(orders):
+    with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(orders, f, indent=4, ensure_ascii=False)
 
 # Orders CRUD
 # Edit Route
 # Edit Route
 @app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
-@login_required()
 def edit_order(index):
-    if session.get('role') not in ['admin', 'seller']:
-        flash('Zugriff verweigert.', 'danger')
-        return redirect(url_for('index'))
-
-    # Load existing orders
-    with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
-        try:
-            orders = json.load(f)
-        except json.JSONDecodeError:
-            flash("Fehler beim Laden der Bestellungen.", "danger")
-            return redirect(url_for('list_orders'))
-
-    if index >= len(orders):
-        flash('Bestellung nicht gefunden.', 'danger')
+    orders = load_orders()
+    if index < 0 or index >= len(orders):
+        flash("Bestellung nicht gefunden.", "danger")
         return redirect(url_for('list_orders'))
-
+    
     order = orders[index]
 
     if request.method == 'POST':
         try:
-            order['product_name'] = request.form.get('product_name', order.get('product_name'))
-            order['ref_number'] = request.form.get('ref_number', order.get('ref_number'))
-            order['description'] = request.form.get('description', order.get('description'))
-            order['price'] = float(request.form.get('price', order.get('price', 0)))
-            order['quantity'] = int(request.form.get('quantity', order.get('quantity', 1)))
-            order['purchase_price'] = float(request.form.get('purchase_price', order.get('purchase_price', 0)))
-            order['selling_price'] = float(request.form.get('selling_price', order.get('selling_price', 0)))
-            order['min_selling_price'] = float(request.form.get('min_selling_price', order.get('min_selling_price', 0)))
+            order['product_name'] = request.form['product_name']
+            order['ref_number'] = request.form['ref_number']
+            order['price'] = float(request.form['price'])
+            order['selling_price'] = float(request.form['selling_price'])
+            order['min_selling_price'] = float(request.form['min_selling_price'])
+            order['quantity'] = int(request.form['quantity'])
+            order['description'] = request.form.get('description', '')
+            order['photo'] = request.form.get('photo', '')
+            order['total_price'] = order['selling_price'] * order['quantity']
+            order['date'] = request.form['date']
+            order['user'] = session.get('username', order.get('user', 'anonymous'))
 
-            # Optional: update photo link if provided
-            photo_link = request.form.get('photo_link')
-            if photo_link:
-                order['photo_link'] = photo_link
-
-            # Recalculate total
-            order['total_price'] = round(order['price'] * order['quantity'], 2)
-
-            # Save updated orders
-            orders[index] = order
-            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(orders, f, indent=2, ensure_ascii=False)
-
-            flash('Bestellung erfolgreich aktualisiert.', 'success')
+            save_orders(orders)
+            flash('Bestellung erfolgreich aktualisiert!', 'success')
             return redirect(url_for('list_orders'))
         except Exception as e:
-            flash(f'Fehler beim Speichern: {e}', 'danger')
-            return redirect(url_for('edit_order', index=index))
+            flash(f'Fehler beim Aktualisieren der Bestellung: {e}', 'danger')
 
     return render_template('edit_order.html', order=order, index=index)
-
 
 # Orders CRUD
 # Delete Route
 @app.route('/orders/delete/<int:index>', methods=['POST'])
-@login_required()
 def delete_order(index):
-    try:
-        with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
-            orders = json.load(f)
-
-        if index < len(orders):
-            orders.pop(index)
-            with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
-                json.dump(orders, f, indent=2, ensure_ascii=False)
-            flash('Bestellung gelöscht.', 'success')
-        else:
-            flash('Ungültiger Index. Bestellung nicht gefunden.', 'danger')
-    except Exception as e:
-        flash(f'Fehler beim Löschen: {e}', 'danger')
-
+    orders = load_orders()
+    if 0 <= index < len(orders):
+        removed_order = orders.pop(index)
+        save_orders(orders)
+        flash(f'Bestellung {removed_order.get("product_name", "")} wurde gelöscht.', 'success')
+    else:
+        flash("Bestellung nicht gefunden.", "danger")
     return redirect(url_for('list_orders'))
-
 
 # save_salary_payment
 def save_salary_payment(payment_record):

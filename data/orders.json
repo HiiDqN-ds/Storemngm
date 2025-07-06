@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "order_number": "194471704773",
+    "product_name": "Iphone 14 Pro Max",
+    "ref_number": "7845123695412",
+    "description": "",
+    "price": 960.0,
+    "selling_price": 1200.0,
+    "min_selling_price": 1040.0,
+    "quantity": 1,
+    "total_price": 960.0,
+    "date": "2025-07-06",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_194471704773",
+    "photo": ""
+  }
+]

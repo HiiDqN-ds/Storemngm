@@ -94,18 +94,22 @@
 
       <tbody>
         {% for sale in sales %}
-        <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(168, 213, 162, 0.2);">
-          <td style="padding: 10px 15px; vertical-align: middle;">{{ sale.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
-          <td style="padding: 10px 15px; vertical-align: middle;">{{ sale.name if sale.name else 'Unbekannt' }}</td>
-          <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ sale.quantity|default(0) }}</td>
-          <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(sale.sale_price|default(0)) }}</td>
-          <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(sale.total_price|default(0)) }}</td>
-          <td style="padding: 10px 15px; text-align: right; vertical-align: middle; font-weight: bold; color: green;">
-            €{{ "{:,.2f}".format(sale.profit|default(0)) }}
-          </td>
-        </tr>
+          {% for item in sale['items'] %}
+            <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(168, 213, 162, 0.2);">
+              <td style="padding: 10px 15px; vertical-align: middle;">{{ sale.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
+              <td style="padding: 10px 15px; vertical-align: middle;">{{ item.product_name or 'Unbekannt' }}</td>
+              <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ item.quantity or 0 }}</td>
+              <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.sale_price or 0) }}</td>
+              <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.total_price or 0) }}</td>
+              <td style="padding: 10px 15px; text-align: right; vertical-align: middle; font-weight: bold; color: green;">
+                €{{ "{:,.2f}".format( ((item.sale_price or 0) - (item.purchase_price or 0)) * (item.quantity or 0) ) }}
+              </td>
+            </tr>
+          {% endfor %}
         {% else %}
-        <tr><td colspan="6" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Verkaufsdaten vorhanden.</td></tr>
+          <tr>
+            <td colspan="6" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Verkaufsdaten vorhanden.</td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
@@ -133,22 +137,24 @@
           <th style="padding: 12px 15px; border-bottom: none; text-align: right;">Gesamtpreis</th>
         </tr>
       </thead>
+      <!-- Einkäufe (Purchases) -->
       <tbody>
         {% for purchase in purchases %}
-        <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(231, 154, 154, 0.2);">
-          <td style="padding: 10px 15px; vertical-align: middle;">{{ purchase.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
-          <td style="padding: 10px 15px; vertical-align: middle;">{{ purchase.product_name if purchase.product_name else 'Unbekannt' }}</td>
-          <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ purchase.quantity|default(0) }}</td>
-          <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(purchase.price|default(0)) }}</td>
-          <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(purchase.total_price|default(0)) }}</td>
-        </tr>
+          <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(231, 154, 154, 0.2);">
+            <td style="padding: 10px 15px; vertical-align: middle;">{{ purchase.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
+            <td style="padding: 10px 15px; vertical-align: middle;">{{ purchase.product_name or 'Unbekannt' }}</td>
+            <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ purchase.quantity or 0 }}</td>
+            <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(purchase.price or 0) }}</td>
+            <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(purchase.total_price or 0) }}</td>
+          </tr>
         {% else %}
-        <tr><td colspan="5" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Einkaufsdaten vorhanden.</td></tr>
+          <tr>
+            <td colspan="5" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Einkaufsdaten vorhanden.</td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
   </section>
 
-</div>
 
 {% endblock %}

@@ -1,1 +1,16 @@
-[]
+[
+  {
+    "date": "2025-07-06T06:58:06.373409",
+    "amount": 500.0,
+    "type": "einzahlung",
+    "description": "start",
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-06T07:07:47.220264",
+    "amount": 100.0,
+    "type": "einzahlung",
+    "description": "test2",
+    "user": "admin"
+  }
+]
