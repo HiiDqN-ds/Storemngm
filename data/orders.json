@@ -1,17 +1,32 @@
 [
-    {
-        "order_number": "571499752213",
-        "product_name": "drgdfgdfg",
-        "ref_number": "fdgfdgdfgdf",
-        "description": "",
-        "price": 96.0,
-        "selling_price": 69.0,
-        "min_selling_price": 69.0,
-        "quantity": 1,
-        "total_price": 96.0,
-        "date": "2025-07-06",
-        "user": "user",
-        "barcode": "barcodes/code_barres_571499752213",
-        "photo": ""
-    }
+  {
+    "order_number": "571499752213",
+    "product_name": "drgdfgdfg",
+    "ref_number": "fdgfdgdfgdf",
+    "description": "",
+    "price": 96.0,
+    "selling_price": 69.0,
+    "min_selling_price": 69.0,
+    "quantity": 1,
+    "total_price": 96.0,
+    "date": "2025-07-06",
+    "user": "user",
+    "barcode": "barcodes/code_barres_571499752213",
+    "photo": ""
+  },
+  {
+    "order_number": "711799927813",
+    "product_name": "dssdsd",
+    "ref_number": "",
+    "description": "",
+    "price": 15.0,
+    "selling_price": 15.0,
+    "min_selling_price": 15.0,
+    "quantity": 1,
+    "total_price": 15.0,
+    "date": "2025-07-06",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_711799927813",
+    "photo": ""
+  }
 ]

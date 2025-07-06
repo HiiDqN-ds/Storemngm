@@ -1129,6 +1129,52 @@ def order():
     return render_template('order_item.html', numero_unique=numero_unique)
 
 
+@app.route('/update_quantity', methods=['POST'])
+@login_required('admin')  # or 'seller' if you want to allow sellers too
+def update_quantity():
+    product_name = request.form.get('product_name', '').strip()
+    add_quantity_raw = request.form.get('add_quantity', '').strip()
+
+    # Validate quantity
+    try:
+        add_quantity = int(add_quantity_raw)
+        if add_quantity < 1:
+            raise ValueError("❌ Die Menge muss mindestens 1 sein.")
+    except (ValueError, TypeError):
+        flash("❌ Ungültige Menge. Bitte geben Sie eine ganze Zahl ≥ 1 ein.", "danger")
+        return redirect(url_for('list_items'))
+
+    # Load items
+    items = []
+    if os.path.exists(ITEMS_FILE):
+        with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
+            try:
+                items = json.load(f)
+            except json.JSONDecodeError:
+                flash("⚠️ Fehler beim Laden der Artikeldaten.", "danger")
+                return redirect(url_for('list_items'))
+
+    # Update quantity if item is found
+    updated = False
+    for item in items:
+        if item.get('product_name', '').strip().lower() == product_name.lower():
+            item['quantity'] = item.get('quantity', 0) + add_quantity
+            updated = True
+            flash(f"✅ Menge von <strong>{product_name}</strong> um <strong>{add_quantity}</strong> erhöht.", 'success')
+            break
+
+    if not updated:
+        flash(f"⚠️ Produkt <strong>{product_name}</strong> nicht gefunden.", 'warning')
+        return redirect(url_for('list_items'))
+
+    # Save updated data
+    with open(ITEMS_FILE, 'w', encoding='utf-8') as f:
+        json.dump(items, f, indent=2, ensure_ascii=False)
+
+    return redirect(url_for('list_items'))
+
+
+
 def load_items_for_seller(username):
     all_items = load_items()
     return [item for item in all_items if item.get('seller') == username]
@@ -1407,9 +1453,8 @@ def kasse():
         total_orders_today=total_orders_today,
         total_balance=total_balance
     )
-# Checking  the  items  after 21 Days
-from datetime import datetime, timedelta
 
+# Checking  the  items  after 21 Days
 def get_old_inventory_alerts(items, days=21):
     alerts = []
     now = datetime.now()
@@ -1427,6 +1472,8 @@ def get_old_inventory_alerts(items, days=21):
             alerts.append(item)
     return alerts
 
+
+# Dimiss Alerts
 @app.route('/dismiss_alert', methods=['POST'])
 @login_required('admin')
 def dismiss_alert():

@@ -1,44 +1,53 @@
 [
-    {
-        "product_name": "galaxy A26",
-        "barcode": "817241420900",
-        "purchase_price": 360.0,
-        "selling_price": 500.0,
-        "min_selling_price": 450.0,
-        "quantity": 29,
-        "photo_link": "",
-        "description": "",
-        "seller": "admin",
-        "name": "galaxy A26",
-        "price": 90.0,
-        "added_date": "2024-06-10T14:23:00"
-    },
-
-    {
-        "product_name": "Iphone 14 Pro Max",
-        "barcode": "194471704773",
-        "purchase_price": 960.0,
-        "selling_price": 1200.0,
-        "min_selling_price": 1040.0,
-        "quantity": 1,
-        "photo_link": "",
-        "description": "",
-        "seller": "admin",
-        "name": "Iphone 14 Pro Max",
-        "price": 1200.0
-    },
-
-    {
-        "product_name": "handy",
-        "barcode": "892880710579",
-        "purchase_price": 192.0,
-        "selling_price": 165.0,
-        "min_selling_price": 165.0,
-        "quantity": 0,
-        "photo_link": "",
-        "description": "",
-        "seller": "admin",
-        "name": "handy",
-        "price": 165.0
-    }
+  {
+    "product_name": "galaxy A26",
+    "barcode": "817241420900",
+    "purchase_price": 360.0,
+    "selling_price": 500.0,
+    "min_selling_price": 450.0,
+    "quantity": 29,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin",
+    "name": "galaxy A26",
+    "price": 90.0,
+    "added_date": "2024-06-10T14:23:00"
+  },
+  {
+    "product_name": "Iphone 14 Pro Max",
+    "barcode": "194471704773",
+    "purchase_price": 960.0,
+    "selling_price": 1200.0,
+    "min_selling_price": 1040.0,
+    "quantity": 5,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin",
+    "name": "Iphone 14 Pro Max",
+    "price": 1200.0
+  },
+  {
+    "product_name": "handy",
+    "barcode": "892880710579",
+    "purchase_price": 192.0,
+    "selling_price": 165.0,
+    "min_selling_price": 165.0,
+    "quantity": 2,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin",
+    "name": "handy",
+    "price": 165.0
+  },
+  {
+    "product_name": "dssdsd",
+    "barcode": "711799927813",
+    "purchase_price": 15.0,
+    "selling_price": 15.0,
+    "min_selling_price": 15.0,
+    "quantity": 2,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin"
+  }
 ]
