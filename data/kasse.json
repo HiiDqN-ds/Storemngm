@@ -5,5 +5,26 @@
     "type": "einzahlung",
     "description": "65",
     "user": "admin"
+  },
+  {
+    "date": "2025-07-06T11:17:08.807457",
+    "amount": -200.0,
+    "type": "auszahlung",
+    "description": "dfg",
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-06T11:20:18.060842",
+    "amount": -150.0,
+    "type": "auszahlung",
+    "description": "yxcxyc",
+    "user": "admin"
+  },
+  {
+    "date": "2025-07-06T11:20:40.455948",
+    "amount": 1600.0,
+    "type": "einzahlung",
+    "description": "yxcyx",
+    "user": "admin"
   }
 ]

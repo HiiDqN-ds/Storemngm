@@ -136,8 +136,11 @@ def load_purchases():
         return json.load(f)
 
 # Date Time Format 
+from datetime import datetime
 @app.template_filter('datetimeformat')
-def datetimeformat(value, format='%d.%m.%Y'):
+def datetimeformat(value, format='%d.%m.%Y %H:%M'):
+    if not value:
+        return ""
     try:
         dt = datetime.fromisoformat(value)
         return dt.strftime(format)
@@ -243,7 +246,7 @@ def admin_dashboard():
 
     # Load wallet (kasse) balance
     kasse_balance = load_kasse_balance()
-    total_balance = round(kasse_balance + daily_sales_total - daily_purchases_total, 2)
+    total_balance = round(kasse_balance - daily_purchases_total + daily_sales_total, 2)
 
     # Generate notifications for items older than 17 days
     alert_threshold = now - timedelta(days=17)
@@ -276,11 +279,6 @@ def admin_dashboard():
     )
 
 
-@app.template_filter('datetimeformat')
-def datetimeformat(value, format='%d.%m.%Y %H:%M'):
-    if isinstance(value, datetime):
-        return value.strftime(format)
-    return value
 
 
 
@@ -291,19 +289,15 @@ import json
 
 def load_kasse_balance():
     kasse_file = os.path.join('data', 'kasse.json')
-    balance = 0.0
+    transactions = []
     if os.path.exists(kasse_file):
         with open(kasse_file, 'r', encoding='utf-8') as f:
             try:
                 transactions = json.load(f)
-                for t in transactions:
-                    if t.get('type') == 'einzahlung':
-                        balance += t.get('amount', 0)
-                    elif t.get('type') == 'auszahlung':
-                        balance -= t.get('amount', 0)
             except json.JSONDecodeError:
                 pass
-    return round(balance, 2)
+    return sum(t.get('amount', 0) for t in transactions)
+
 
 
 def format_currency_de(amount):
@@ -1372,33 +1366,21 @@ def kasse():
     sales_file = os.path.join('data', 'sales.json')
     purchases_file = os.path.join('data', 'orders.json')
 
-    transactions, sales, purchases = [], [], []
+    # Safely load all data
+    def load_json(path):
+        if os.path.exists(path):
+            with open(path, 'r', encoding='utf-8') as f:
+                try:
+                    return json.load(f)
+                except json.JSONDecodeError:
+                    return []
+        return []
 
-    # Lade Kasse
-    if os.path.exists(kasse_file):
-        with open(kasse_file, 'r', encoding='utf-8') as f:
-            try:
-                transactions = json.load(f)
-            except json.JSONDecodeError:
-                pass
+    transactions = load_json(kasse_file)
+    sales = load_json(sales_file)
+    purchases = load_json(purchases_file)
 
-    # Lade Verkäufe
-    if os.path.exists(sales_file):
-        with open(sales_file, 'r', encoding='utf-8') as f:
-            try:
-                sales = json.load(f)
-            except json.JSONDecodeError:
-                pass
-
-    # Lade Bestellungen
-    if os.path.exists(purchases_file):
-        with open(purchases_file, 'r', encoding='utf-8') as f:
-            try:
-                purchases = json.load(f)
-            except json.JSONDecodeError:
-                pass
-
-    # POST: Transaktion hinzufügen oder löschen
+    # Handle POST: Add or delete entry
     if request.method == 'POST':
         if 'delete_date' in request.form and session.get('role') == 'admin':
             delete_date = request.form['delete_date']
@@ -1411,15 +1393,15 @@ def kasse():
         try:
             amount = float(request.form['betrag'])
             description = request.form.get('beschreibung', '').strip()
-            ktype = request.form.get('typ')
+            ktype = request.form.get('typ', '').strip().lower()
+            print("typ:", ktype, "amount before processing:", amount)
             if ktype not in ['einzahlung', 'auszahlung']:
                 raise ValueError("Ungültiger Typ")
 
-            if ktype == 'auszahlung':
-                amount = -abs(amount)
-            else:
-                amount = abs(amount)
-
+            # Auszahlung = negative amount
+            amount = -abs(amount) if ktype == 'auszahlung' else abs(amount)
+            print("amount after processing:", amount)
+            
             transaction = {
                 "date": datetime.now().isoformat(),
                 "amount": round(amount, 2),
@@ -1439,44 +1421,39 @@ def kasse():
         except Exception as e:
             flash(f"Fehler: {e}", "danger")
 
-    # Berechnung der Salden
+    # Balance calculations
     today = datetime.now().date()
 
-    # Einnahmen aus Verkäufen
+    # Verkäufe heute
     total_sold_today = 0.0
     for sale in sales:
-        sale_date = sale.get('date')
-        if not sale_date:
-            continue
         try:
-            sale_day = datetime.fromisoformat(sale_date).date()
-            if sale_day == today:
-                if 'items' in sale:
+            sale_date = sale.get('date')
+            if sale_date and datetime.fromisoformat(sale_date).date() == today:
+                if isinstance(sale.get('items'), list):
                     total_sold_today += sum(item.get('total_price', 0) for item in sale['items'])
                 else:
                     total_sold_today += sale.get('total_price', 0)
-        except Exception:
+        except:
             continue
 
-    # Ausgaben aus Bestellungen
+    # Bestellungen heute
     total_orders_today = 0.0
     for order in purchases:
-        order_date = order.get('date')
-        if not order_date:
-            continue
         try:
-            order_day = datetime.fromisoformat(order_date).date()
-            if order_day == today:
+            order_date = order.get('date')
+            if order_date and datetime.fromisoformat(order_date).date() == today:
                 total_orders_today += order.get('total_price', 0)
-        except Exception:
+        except:
             continue
 
+    # Gesamtsaldo
     current_balance = sum(t.get('amount', 0) for t in transactions)
     total_balance = current_balance + total_sold_today - total_orders_today
 
     return render_template(
         "kasse.html",
-        transactions=reversed(transactions),
+        transactions=reversed(transactions),  # newest first
         role=session.get('role'),
         current_balance=current_balance,
         total_sold_today=total_sold_today,

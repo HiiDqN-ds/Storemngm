@@ -93,25 +93,25 @@
       </thead>
 
       <tbody>
-        {% for sale in sales %}
-          {% for item in sale['items'] %}
-            <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(168, 213, 162, 0.2);">
-              <td style="padding: 10px 15px; vertical-align: middle;">{{ sale.date | datetimeformat('%d.%m.%Y %H:%M') }}</td>
-              <td style="padding: 10px 15px; vertical-align: middle;">{{ item.product_name or 'Unbekannt' }}</td>
-              <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ item.quantity or 0 }}</td>
-              <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.sale_price or 0) }}</td>
-              <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.total_price or 0) }}</td>
-              <td style="padding: 10px 15px; text-align: right; vertical-align: middle; font-weight: bold; color: green;">
-                €{{ "{:,.2f}".format( ((item.sale_price or 0) - (item.purchase_price or 0)) * (item.quantity or 0) ) }}
-              </td>
+          {% for sale in sales %}
+            {% for item in sale.get('items', []) %}
+              <tr style="background: white; border-radius: 6px; box-shadow: 0 2px 5px rgba(168, 213, 162, 0.2);">
+                <td style="padding: 10px 15px; vertical-align: middle;">{{ sale.date | datetimeformat }}</td>
+                <td style="padding: 10px 15px; vertical-align: middle;">{{ item.product_name or 'Unbekannt' }}</td>
+                <td style="padding: 10px 15px; text-align: center; vertical-align: middle;">{{ item.quantity or 0 }}</td>
+                <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.sale_price or 0) }}</td>
+                <td style="padding: 10px 15px; text-align: right; vertical-align: middle;">€{{ "{:,.2f}".format(item.total_price or 0) }}</td>
+                <td style="padding: 10px 15px; text-align: right; vertical-align: middle; font-weight: bold; color: green;">
+                  €{{ "{:,.2f}".format( ((item.sale_price or 0) - (item.purchase_price or 0)) * (item.quantity or 0) ) }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="6" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Verkaufsdaten vorhanden.</td>
             </tr>
           {% endfor %}
-        {% else %}
-          <tr>
-            <td colspan="6" style="text-align: center; padding: 20px; font-style: italic; color: #555;">Keine Verkaufsdaten vorhanden.</td>
-          </tr>
-        {% endfor %}
-      </tbody>
+        </tbody>
     </table>
   </div>
   </section>
