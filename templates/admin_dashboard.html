@@ -96,12 +96,12 @@
   </div>
 
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
-    <h2>Wallet + Täglicher Gewinn</h2>
+    <h2> Wallet + Täglicher Gewinn</h2>
     <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format((wallet_balance|default(0)) + (daily_profit|default(0))) }}</p>
   </div>
 
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
-    <h2>Gesamtgewinn (Allzeit)</h2>
+    <h2><span>Wallet + Heutiger Gewinn</span></h2>
     <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(all_time_profit|default(0)) }}</p>
   </div>
 </div>
