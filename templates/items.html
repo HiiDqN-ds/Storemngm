@@ -4,11 +4,11 @@
 {% block content %}
 <h2>Items</h2>
 <a href="{{ url_for('add_item') }}" class="btn btn-primary mb-3">
-  <i class="bi bi-plus-circle me-1"></i> Add New Item
+  <i class="bi bi-plus-circle me-1"></i> Neues Produkt hinzufügen
 </a>
 <!-- New tall button for increasing quantity -->
 <a href="#updateQuantityForm" class="btn btn-success mb-3" id="increaseQuantityBtn">
-  <i class="bi bi-plus-circle me-1"></i> Menge eines bestehenden Produkts erhöhen
+  <i class="bi bi-plus-circle me-1"></i> Menge Produkts erhöhen
 </a>
 <!-- Hidden form to update quantity -->
 <div id="updateQtyForm" style="display:none; margin-bottom: 1rem;">
@@ -35,13 +35,13 @@
     <tr>
       <th>Produktname</th>
       <th>Barcode</th>
-      <th>Purchase Price (€)</th>
-      <th>Selling Price (€)</th>
-      <th>Min Selling Price (€)</th>
-      <th>Quantity</th>
-      <th>Description</th>
-      <th>Photo</th>
-      <th>Actions</th>
+      <th>Einkaufspreis (€)</th>
+      <th>Verkaufspreis (€)</th>
+      <th>Min Verkaufspreis (€)</th>
+      <th>Menge</th>
+      <th>Beschreibung</th>
+      <th>Foto</th>
+      <th>Aktionen</th>
     </tr>
   </thead>
   <tbody>

@@ -8,9 +8,10 @@ import random
 import barcode
 from barcode.writer import ImageWriter
 from collections import defaultdict
-from flask import jsonify
+from flask import jsonify,send_file
 import uuid
 import glob
+import io
 
 app = Flask(__name__)
 app.secret_key = 'secret'  # Set a strong secret key for production

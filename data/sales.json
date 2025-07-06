@@ -1,18 +1,18 @@
 [
     {
-        "order_id": "26feede7-acc8-43ef-b839-086183927613",
+        "order_id": "c7cdf7fc-ea44-4c64-97b7-cda1a5a3f388",
         "user": "admin",
-        "date": "2025-07-06T08:28:45.213225",
+        "date": "2025-07-06T09:45:47.836187",
         "items": [
             {
                 "barcode": "892880710579",
                 "product_name": "handy",
                 "quantity": 1,
-                "sale_price": 165.0,
-                "total_price": 165.0,
-                "purchase_price": 192.0
+                "sale_price": 190.0,
+                "total_price": 190.0,
+                "purchase_price": 160.0
             }
         ],
-        "total_order_price": 165.0
+        "total_order_price": 190.0
     }
 ]
