@@ -1129,49 +1129,69 @@ def order():
     return render_template('order_item.html', numero_unique=numero_unique)
 
 
+# Update  Quantity
+# Update Quantity
 @app.route('/update_quantity', methods=['POST'])
-@login_required('admin')  # or 'seller' if you want to allow sellers too
+@login_required('admin')  # oder 'seller' falls nötig
 def update_quantity():
+    barcode = request.form.get('barcode', '').strip()
     product_name = request.form.get('product_name', '').strip()
-    add_quantity_raw = request.form.get('add_quantity', '').strip()
+    add_quantity_str = request.form.get('add_quantity', '0').strip()
 
-    # Validate quantity
+    # Flexible Barcode-Fallback:
+    # Wenn kein barcode angegeben, aber product_name eine reine Zahl (Barcode) ist,
+    # dann barcode = product_name, und product_name wird leer gesetzt
+    if not barcode and product_name and product_name.isdigit():
+        barcode = product_name
+        product_name = ''
+
+    # Menge validieren
     try:
-        add_quantity = int(add_quantity_raw)
+        add_quantity = int(add_quantity_str)
         if add_quantity < 1:
-            raise ValueError("❌ Die Menge muss mindestens 1 sein.")
-    except (ValueError, TypeError):
-        flash("❌ Ungültige Menge. Bitte geben Sie eine ganze Zahl ≥ 1 ein.", "danger")
+            flash("Menge muss mindestens 1 sein.", "danger")
+            return redirect(url_for('list_items'))
+    except ValueError:
+        flash("Ungültige Menge angegeben.", "danger")
         return redirect(url_for('list_items'))
 
-    # Load items
+    # Mindestens barcode oder product_name muss gesetzt sein
+    if not barcode and not product_name:
+        flash("Bitte Produktname oder Barcode eingeben.", "warning")
+        return redirect(url_for('list_items'))
+
+    # Items laden
     items = []
     if os.path.exists(ITEMS_FILE):
         with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
             try:
                 items = json.load(f)
             except json.JSONDecodeError:
-                flash("⚠️ Fehler beim Laden der Artikeldaten.", "danger")
-                return redirect(url_for('list_items'))
+                items = []
 
-    # Update quantity if item is found
-    updated = False
+    found = False
     for item in items:
-        if item.get('product_name', '').strip().lower() == product_name.lower():
-            item['quantity'] = item.get('quantity', 0) + add_quantity
-            updated = True
-            flash(f"✅ Menge von <strong>{product_name}</strong> um <strong>{add_quantity}</strong> erhöht.", 'success')
+        # Nach Barcode exakt oder Produktname (case-insensitive) suchen
+        if (barcode and item.get('barcode') == barcode) or (product_name and item.get('product_name', '').lower() == product_name.lower()):
+            old_qty = item.get('quantity', 0)
+            item['quantity'] = old_qty + add_quantity
+            found = True
+            flash(f"Menge von '{item.get('product_name')}' von {old_qty} auf {item['quantity']} erhöht.", "success")
             break
 
-    if not updated:
-        flash(f"⚠️ Produkt <strong>{product_name}</strong> nicht gefunden.", 'warning')
+    if not found:
+        flash("Produkt nicht gefunden. Bitte Produktname oder Barcode prüfen.", "warning")
         return redirect(url_for('list_items'))
 
-    # Save updated data
+    # Änderungen speichern
     with open(ITEMS_FILE, 'w', encoding='utf-8') as f:
         json.dump(items, f, indent=2, ensure_ascii=False)
 
     return redirect(url_for('list_items'))
+
+
+
+
 
 
 
