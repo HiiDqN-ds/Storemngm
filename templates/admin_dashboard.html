@@ -13,7 +13,7 @@
   <!-- Mailbox Toggle and Panel -->
   <div style="position: relative;">
     <button id="mailbox-toggle-btn" onclick="toggleMailbox()" style="
-      background-color: #2e7fdb;
+      background-color: #01414600;
       color: white;
       padding: 10px 20px;
       border: none;
@@ -240,8 +240,26 @@ function dismissNotification(barcode, btnElement) {
     body: "barcode=" + encodeURIComponent(barcode)
   }).then(response => {
     if (response.ok) {
+      // Remove the notification item from the list
       const noteItem = btnElement.closest("li");
       if (noteItem) noteItem.remove();
+
+      // Update the notification count badge
+      const badge = document.querySelector("#mailbox-toggle-btn span");
+      if (badge) {
+        let count = parseInt(badge.textContent) || 0;
+        count = count - 1;
+        if (count > 0) {
+          badge.textContent = count;
+        } else {
+          // Remove the badge if no notifications left
+          badge.remove();
+
+          // Optional: If you want to also hide mailbox panel automatically when no notifications left
+          const panel = document.getElementById("mailbox-panel");
+          panel.style.display = "none";
+        }
+      }
     }
   });
 }
