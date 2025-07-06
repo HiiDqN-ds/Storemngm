@@ -3,41 +3,81 @@
 {% block title %}Admin Dashboard - Verwaltungsplattform{% endblock %}
 
 {% block content %}
-<h1>Hallo, {{ session['username'] }}!</h1>
-<div class="user-info" style="margin-bottom: 20px;">Ihre Rolle: <strong>{{ session['role'] }}</strong></div>
-
-<!-- Notifications Box -->
-{% if notifications %}
-  <div class="notifications" style="
-    margin-bottom: 20px;
-    padding: 15px 20px;
-    border-radius: 8px;
-    background-color: #fff3cd;
-    border: 1px solid #ffeeba;
-    color: #856404;
-    font-weight: 600;
-    position: relative;
-  ">
-    {% for note in notifications %}
-      <div style="margin-bottom: 10px; padding-right: 40px; position: relative;">
-        {{ note.message }}
-        <!-- Optional: Dismiss Button -->
-        <form method="POST" action="{{ url_for('dismiss_alert') }}" style="display:inline; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);">
-          <input type="hidden" name="barcode" value="{{ note.barcode }}">
-          <button type="submit" title="Schließen" style="
-            background: none;
-            border: none;
-            font-weight: bold;
-            color: #856404;
-            cursor: pointer;
-            font-size: 1.2em;
-            line-height: 1;
-          ">×</button>
-        </form>
-      </div>
-    {% endfor %}
+<!-- Header with Greeting -->
+<div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 30px; margin-bottom: 25px; flex-wrap: wrap;">
+  <div>
+    <h1 style="margin: 0;">Hallo, {{ session['username'] }}!</h1>
+    <div class="user-info" style="margin-top: 5px;">Ihre Rolle: <strong>{{ session['role'] }}</strong></div>
   </div>
-{% endif %}
+
+  <!-- Mailbox Toggle and Panel -->
+  <div style="position: relative;">
+    <button id="mailbox-toggle-btn" onclick="toggleMailbox()" style="
+      background-color: #2e7fdb;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      position: relative;
+    " title="{% if mailbox_notifications and mailbox_notifications|length > 0 %}Sie haben {{ mailbox_notifications|length }} neue Mitteilungen{% else %}Keine neuen Mitteilungen{% endif %}">
+      📬 
+      {% if mailbox_notifications and mailbox_notifications|length > 0 %}
+        <span style="
+          position: absolute;
+          top: 5px;
+          right: 5px;
+          background: #e74c3c;
+          color: white;
+          font-size: 0.75em;
+          font-weight: bold;
+          padding: 2px 7px;
+          border-radius: 12px;
+          opacity: 0.9;
+          box-shadow: 0 0 5px rgba(231, 76, 60, 0.7);
+        ">{{ mailbox_notifications|length }}</span>
+      {% endif %}
+    </button>
+
+    <div id="mailbox-panel" style="
+      display: none;
+      position: absolute;
+      top: 45px;
+      right: 0;
+      width: 320px;
+      max-height: 400px;
+      background: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      padding: 15px;
+      z-index: 999;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    ">
+      <h3 style="margin-bottom: 10px; font-weight: 600; color: #2f5e33;">
+        <i class="fa-solid fa-envelope-open-text" style="color: #3a7d44; margin-right: 8px;"></i>
+        Ihre Mitteilungen
+      </h3>
+
+      {% if mailbox_notifications %}
+        <ul style="list-style: none; padding-left: 0; margin: 0;">
+          {% for note in mailbox_notifications %}
+            <li style="position: relative; padding-right: 35px; margin-bottom: 12px;">
+              <div style="font-size: 0.85em; color: #666; font-style: italic;">{{ note.date | datetimeformat('%d.%m.%Y') }}</div>
+              <div style="margin-top: 6px; line-height: 1.3;">{{ note.message }}</div>
+              <button title="Entfernen" onclick="dismissNotification('{{ note.barcode }}', this)" class="dismiss-btn">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <div style="font-style: italic; color: #666;">Keine neuen Mitteilungen vorhanden.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
 
 <div class="stats" style="display: flex; gap: 40px; margin-bottom: 25px; flex-wrap: wrap;">
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
@@ -155,6 +195,55 @@
       </tbody>
     </table>
   </section>
+<style>
+.dismiss-btn {
+  background: none;
+  border: none;
+  color: #999;
+  font-size: 1.2em;
+  cursor: pointer;
+  transition: color 0.3s;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+.dismiss-btn:hover {
+  color: #c0392b;
+}
+</style>
 
+<script>
+function toggleMailbox() {
+  const panel = document.getElementById("mailbox-panel");
+  panel.style.display = (panel.style.display === "block") ? "none" : "block";
+}
 
+document.addEventListener("click", function(event) {
+  const panel = document.getElementById("mailbox-panel");
+  const button = document.getElementById("mailbox-toggle-btn");
+  if (!panel.contains(event.target) && !button.contains(event.target)) {
+    panel.style.display = "none";
+  }
+});
+
+document.addEventListener('keydown', function(event) {
+  if (event.key === "Escape") {
+    const panel = document.getElementById("mailbox-panel");
+    panel.style.display = "none";
+  }
+});
+
+function dismissNotification(barcode, btnElement) {
+  fetch("/dismiss_alert", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "barcode=" + encodeURIComponent(barcode)
+  }).then(response => {
+    if (response.ok) {
+      const noteItem = btnElement.closest("li");
+      if (noteItem) noteItem.remove();
+    }
+  });
+}
+</script>
 {% endblock %}

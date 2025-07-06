@@ -149,3 +149,16 @@ select:focus {
   color: #fff;
 }
 
+#mailbox-panel {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  opacity: 0;
+  transform: translateY(-10px);
+  pointer-events: none;
+}
+
+#mailbox-panel.show {
+  display: block !important;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}

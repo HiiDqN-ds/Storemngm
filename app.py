@@ -148,8 +148,7 @@ def datetimeformat(value, format='%d.%m.%Y %H:%M'):
         return value
 
 
-from flask import session
-from datetime import datetime
+
 
 
 def calculate_all_time_profit(sales, items):
@@ -163,8 +162,15 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
-from flask import render_template
-from datetime import datetime, timedelta
+@app.route('/admin/notifications')
+@login_required('admin')
+def admin_notifications():
+    # This should prepare mailbox_notifications same as your dashboard
+    # Example (adjust according to your data source):
+    mailbox_notifications = get_mailbox_notifications()  # Your existing function or logic
+    
+    return render_template("admin_notifications.html", mailbox_notifications=mailbox_notifications)
+
 
 @app.route('/admin')
 @login_required('admin')
@@ -173,20 +179,18 @@ def admin_dashboard():
     today = now.date()
 
     # Load data
-    sales = load_sales()          # sales = list of orders, each has 'items' list
+    sales = load_sales()
     purchases = load_purchases()
     items = load_items()
 
-    # Parse sale dates & calculate profit per item and total profit per sale
+    # Parse sales dates and calculate profits
     for sale in sales:
-        # Parse sale date
         if isinstance(sale.get('date'), str):
             try:
                 sale['date'] = datetime.fromisoformat(sale['date'])
             except Exception:
                 sale['date'] = datetime.min
 
-        # Calculate profit per item and accumulate total profit of the sale
         total_profit_per_sale = 0
         for item in sale.get('items', []):
             try:
@@ -208,62 +212,71 @@ def admin_dashboard():
             except Exception:
                 purchase['date'] = datetime.min
 
-    # Calculate all-time profit (sum of all item profits)
-    all_time_profit = sum(
+    # Profit calculations
+    all_time_profit = round(sum(
         item['profit']
         for sale in sales
         for item in sale.get('items', [])
-    )
-    all_time_profit = round(all_time_profit, 2)
+    ), 2)
 
-    # Calculate daily sales total and daily purchases total
     daily_sales_total = sum(
         item.get('total_price', 0)
         for sale in sales if sale['date'].date() == today
         for item in sale.get('items', [])
     )
+
     daily_purchases_total = sum(
         p.get('total_price', 0)
         for p in purchases if p['date'].date() == today
     )
+
     daily_profit = round(daily_sales_total - daily_purchases_total, 2)
 
-    # Calculate monthly sales and purchases total
     monthly_sales = sum(
         item.get('total_price', 0)
         for sale in sales if sale['date'].year == now.year and sale['date'].month == now.month
         for item in sale.get('items', [])
     )
+
     monthly_purchases = sum(
         p.get('total_price', 0)
         for p in purchases if p['date'].year == now.year and p['date'].month == now.month
     )
+
     monthly_profit = round(monthly_sales - monthly_purchases, 2)
 
-    # Sort sales and purchases by date descending
     sales_sorted = sorted(sales, key=lambda x: x['date'], reverse=True)
     purchases_sorted = sorted(purchases, key=lambda x: x['date'], reverse=True)
 
-    # Load wallet (kasse) balance
     kasse_balance = load_kasse_balance()
     total_balance = round(kasse_balance - daily_purchases_total + daily_sales_total, 2)
 
-    # Generate notifications for items older than 17 days
-    alert_threshold = now - timedelta(days=17)
-    notifications = []
+    # 📬 Mailbox-style notifications
+    mailbox_notifications = []
+    threshold_date = now - timedelta(days=21)
+
     for item in items:
+        # Check if date exists
         item_date_str = item.get('added_date') or item.get('date')
-        if not item_date_str:
-            continue
         try:
             item_date = datetime.fromisoformat(item_date_str)
-        except Exception:
+        except:
             continue
-        if item_date < alert_threshold:
-            notifications.append({
-                "type": "warning",
-                "message": f"Produkt '{item.get('product_name', 'Unbekannt')}' ist seit über 17 Tagen im Lager. Bitte prüfen!",
-                "barcode": item.get('barcode', '')
+
+        # Notification: Item older than 21 days
+        if item_date < threshold_date:
+            mailbox_notifications.append({
+                'date': item_date_str,
+                'message': f"📦 Produkt '{item.get('product_name', 'Unbekannt')}' ist seit { (now - item_date).days } Tagen im Lager.",
+                'barcode': item.get('barcode', '')
+            })
+
+        # Notification: Quantity ≤ 5
+        if item.get('quantity', 0) <= 5:
+            mailbox_notifications.append({
+                'date': now.isoformat(),
+                'message': f"⚠️ Niedriger Lagerbestand für '{item.get('product_name', 'Unbekannt')}' – nur noch {item.get('quantity')} Stück!",
+                'barcode': item.get('barcode', '')
             })
 
     return render_template(
@@ -275,8 +288,9 @@ def admin_dashboard():
         total_balance=total_balance,
         sales=sales_sorted,
         purchases=purchases_sorted,
-        notifications=notifications
+        mailbox_notifications=mailbox_notifications
     )
+
 
 
 
@@ -1478,26 +1492,6 @@ def kasse():
 
 
 
-
-# Checking  the  items  after 21 Days
-def get_old_inventory_alerts(items, days=21):
-    alerts = []
-    now = datetime.now()
-    threshold = timedelta(days=days)
-
-    for item in items:
-        date_str = item.get('added_date')
-        if not date_str:
-            continue  # skip items without date
-        try:
-            added_date = datetime.fromisoformat(date_str)
-        except Exception:
-            continue
-        if now - added_date > threshold:
-            alerts.append(item)
-    return alerts
-
-
 # Dimiss Alerts
 @app.route('/dismiss_alert', methods=['POST'])
 @login_required('admin')
@@ -1522,7 +1516,7 @@ def dismiss_alert():
         })
 
     save_json(ALERTS_DISMISS_FILE, dismissed_alerts)
-    flash(f"⏳ Erinnerung für Produkt mit Barcode {barcode} wird in 3 Tagen wieder angezeigt.", "success")
+    
     return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':

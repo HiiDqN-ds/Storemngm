@@ -14,17 +14,10 @@
     "user": "admin"
   },
   {
-    "date": "2025-07-06T11:20:18.060842",
-    "amount": -150.0,
-    "type": "auszahlung",
-    "description": "yxcxyc",
-    "user": "admin"
-  },
-  {
-    "date": "2025-07-06T11:20:40.455948",
-    "amount": 1600.0,
+    "date": "2025-07-06T12:44:02.458274",
+    "amount": 100.0,
     "type": "einzahlung",
-    "description": "yxcyx",
+    "description": "cx",
     "user": "admin"
   }
 ]

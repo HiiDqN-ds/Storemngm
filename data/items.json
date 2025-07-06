@@ -77,5 +77,29 @@
         "seller": "user",
         "name": "galaxy A266",
         "price": 350.0
+    },
+    {
+        "name": "iphone",
+        "barcode": "xe10kolllgg",
+        "purchase_price": 150.0,
+        "selling_price": 150.0,
+        "min_selling_price": 150.0,
+        "quantity": 1,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "added_date": "2025-07-06T11:43:49.124800"
+    },
+    {
+        "name": "ddddd",
+        "barcode": "d sdsdssd",
+        "purchase_price": 90.0,
+        "selling_price": 9090.0,
+        "min_selling_price": 95.0,
+        "quantity": 99,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "added_date": "2025-06-06T12:22:18.342970"
     }
 ]
