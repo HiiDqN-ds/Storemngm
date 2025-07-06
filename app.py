@@ -10,6 +10,7 @@ from barcode.writer import ImageWriter
 from collections import defaultdict
 from flask import jsonify
 import uuid
+import glob
 
 app = Flask(__name__)
 app.secret_key = 'secret'  # Set a strong secret key for production
@@ -507,29 +508,47 @@ def list_sellers():
         seller.setdefault('activated', False)
     return render_template('sellers.html', sellers=sellers)
 
-# Admin: Add Seller
 @app.route('/admin/sellers/add', methods=['GET', 'POST'])
 @login_required('admin')
 def add_seller():
     if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        profile_img = request.form.get('profile_img', '')
-        salary = float(request.form.get('salary', 0.0))
+        username = request.form.get('username', '').strip()
+        password = request.form.get('password', '')
+        profile_img = request.form.get('profile_img', '').strip()
+        salary_str = request.form.get('salary', '').strip()
         activated = 'activated' in request.form
 
-        sellers = load_users()
-        if any(s['username'] == username for s in sellers):
-            flash('Username already exists', 'danger')
+        # Basic validation
+        if not username:
+            flash('Benutzername darf nicht leer sein.', 'danger')
             return redirect(url_for('add_seller'))
 
-        # ✅ Hash the password using scrypt or default PBKDF2
+        if not password:
+            flash('Passwort darf nicht leer sein.', 'danger')
+            return redirect(url_for('add_seller'))
+
+        # Convert salary safely
+        try:
+            salary = float(salary_str) if salary_str else 0.0
+            if salary < 0:
+                raise ValueError("Gehalt darf nicht negativ sein.")
+        except ValueError as e:
+            flash(f'Ungültiges Gehalt: {e}', 'danger')
+            return redirect(url_for('add_seller'))
+
+        # Load existing sellers
+        sellers = load_users()
+        if any(s['username'].lower() == username.lower() for s in sellers):
+            flash('Benutzername existiert bereits.', 'danger')
+            return redirect(url_for('add_seller'))
+
+        # Hash the password securely
         hashed_password = generate_password_hash(password, method='scrypt')
 
         new_seller = {
             'username': username,
             'password': hashed_password,
-            'role': 'seller',  # 🔒 Recommended: Always specify a role
+            'role': 'seller',
             'profile_img': profile_img,
             'salary': salary,
             'activated': activated
@@ -537,10 +556,12 @@ def add_seller():
 
         sellers.append(new_seller)
         save_users(sellers)
-        flash('Seller added successfully', 'success')
+
+        flash('Verkäufer erfolgreich hinzugefügt!', 'success')
         return redirect(url_for('list_sellers'))
 
     return render_template('add_seller.html')
+
 
 
 

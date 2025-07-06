@@ -142,5 +142,18 @@
         "seller": "user",
         "name": "1234567890123",
         "price": 1234567890123.0
+    },
+    {
+        "product_name": "handy",
+        "barcode": "892880710579",
+        "purchase_price": 192.0,
+        "selling_price": 165.0,
+        "min_selling_price": 165.0,
+        "quantity": 0,
+        "photo_link": "",
+        "description": "",
+        "seller": "admin",
+        "name": "handy",
+        "price": 165.0
     }
 ]

@@ -1,18 +1,18 @@
 [
     {
-        "order_id": "2801e331-0e1e-4883-81e4-8f758b327927",
-        "user": "user",
-        "date": "2025-07-06T08:15:43.664356",
+        "order_id": "26feede7-acc8-43ef-b839-086183927613",
+        "user": "admin",
+        "date": "2025-07-06T08:28:45.213225",
         "items": [
             {
-                "barcode": "817241420900",
-                "product_name": "galaxy A26",
+                "barcode": "892880710579",
+                "product_name": "handy",
                 "quantity": 1,
-                "sale_price": 500.0,
-                "total_price": 500.0,
-                "purchase_price": 360.0
+                "sale_price": 165.0,
+                "total_price": 165.0,
+                "purchase_price": 192.0
             }
         ],
-        "total_order_price": 500.0
+        "total_order_price": 165.0
     }
 ]

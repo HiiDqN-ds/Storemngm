@@ -14,5 +14,13 @@
         "profile_img": "",
         "salary": 1200.0,
         "activated": true
+    },
+    {
+        "username": "aaaa",
+        "password": "scrypt:32768:8:1$Fbi6MOYY1AEiZtVH$21c281bfc0ea9e0d41f67964e6e25a6ff8ca8fc8ca99fa8f022dd05bf93eba9e30229a770b82fdd941023a8fd902dc3327b75f7c2e88f37125c295e3baa1b997",
+        "role": "seller",
+        "profile_img": "",
+        "salary": 880.0,
+        "activated": true
     }
 ]
