@@ -1,32 +1,32 @@
 [
-  {
-    "order_number": "365381769240",
-    "product_name": "handy",
-    "ref_number": "",
-    "description": "",
-    "price": 160.0,
-    "selling_price": 190.0,
-    "min_selling_price": 180.0,
-    "quantity": 1,
-    "total_price": 160.0,
-    "date": "2025-07-06",
-    "user": "admin",
-    "barcode": "barcodes/code_barres_365381769240",
-    "photo": ""
-  },
-  {
-    "order_number": "714802144839",
-    "product_name": "u",
-    "ref_number": "",
-    "description": "",
-    "price": 15.0,
-    "selling_price": 30.0,
-    "min_selling_price": 30.0,
-    "quantity": 1,
-    "total_price": 15.0,
-    "date": "2025-07-06",
-    "user": "admin",
-    "barcode": "barcodes/code_barres_714802144839",
-    "photo": ""
-  }
+    {
+        "order_number": "714802144839",
+        "product_name": "u",
+        "ref_number": "",
+        "description": "",
+        "price": 15.0,
+        "selling_price": 30.0,
+        "min_selling_price": 30.0,
+        "quantity": 1,
+        "total_price": 15.0,
+        "date": "2025-07-06",
+        "user": "admin",
+        "barcode": "barcodes/code_barres_714802144839",
+        "photo": ""
+    },
+    {
+        "order_number": "875166911018",
+        "product_name": "galaxy A266",
+        "ref_number": "",
+        "description": "",
+        "price": 300.0,
+        "selling_price": 350.0,
+        "min_selling_price": 350.0,
+        "quantity": 1,
+        "total_price": 300.0,
+        "date": "2025-07-06",
+        "user": "user",
+        "barcode": "barcodes/code_barres_875166911018",
+        "photo": ""
+    }
 ]

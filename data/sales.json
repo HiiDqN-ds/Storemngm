@@ -14,5 +14,37 @@
             }
         ],
         "total_order_price": 190.0
+    },
+    {
+        "order_id": "759e534e-3112-4bd3-aec8-e46afa1f0d62",
+        "user": "user",
+        "date": "2025-07-06T09:54:41.456148",
+        "items": [
+            {
+                "barcode": "194471704773",
+                "product_name": "Iphone 14 Pro Max",
+                "quantity": 1,
+                "sale_price": 1200.0,
+                "total_price": 1200.0,
+                "purchase_price": 960.0
+            }
+        ],
+        "total_order_price": 1200.0
+    },
+    {
+        "order_id": "5b1cbd43-f28a-4d64-9921-4a147014647e",
+        "user": "admin",
+        "date": "2025-07-06T10:01:23.844369",
+        "items": [
+            {
+                "barcode": "194471704773",
+                "product_name": "Iphone 14 Pro Max",
+                "quantity": 1,
+                "sale_price": 1200.0,
+                "total_price": 1200.0,
+                "purchase_price": 960.0
+            }
+        ],
+        "total_order_price": 1200.0
     }
 ]
