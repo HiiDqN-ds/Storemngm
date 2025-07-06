@@ -1,15 +1,38 @@
 [
-    {
-        "product_name": "galaxy A26",
-        "barcode": "817241420900",
-        "purchase_price": 360.0,
-        "selling_price": 500.0,
-        "min_selling_price": 450.0,
-        "quantity": 46,
-        "photo_link": "",
-        "description": "",
-        "seller": "admin",
-        "name": "galaxy A26",
-        "price": 90.0
-    }
+  {
+    "product_name": "galaxy A26",
+    "barcode": "817241420900",
+    "purchase_price": 360.0,
+    "selling_price": 500.0,
+    "min_selling_price": 450.0,
+    "quantity": 44,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin",
+    "name": "galaxy A26",
+    "price": 90.0,
+    "added_date": "2024-06-10T14:23:00"
+  },
+  {
+    "product_name": "ghgfh",
+    "barcode": "261510216959",
+    "purchase_price": 685.0,
+    "selling_price": 86868.0,
+    "min_selling_price": 6886.0,
+    "quantity": 1,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin"
+  },
+  {
+    "product_name": "ftgfghgf",
+    "barcode": "692621130860",
+    "purchase_price": 8888.0,
+    "selling_price": 888.0,
+    "min_selling_price": 8888.0,
+    "quantity": 1,
+    "photo_link": "",
+    "description": "",
+    "seller": "admin"
+  }
 ]

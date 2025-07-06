@@ -20,7 +20,7 @@ ITEMS_FILE = os.path.join(DATA_PATH, 'items.json')
 SALES_FILE = os.path.join(DATA_PATH, 'sales.json')
 ORDERS_FILE = os.path.join(DATA_PATH, 'orders.json')
 PAYMENTS_FILE = os.path.join(DATA_PATH, 'salary_payments.json')
-
+ALERTS_DISMISS_FILE = os.path.join(DATA_PATH, 'dismissed_alerts.json')
 # Helper to load JSON file
 def load_json(file_path):
     if not os.path.exists(file_path):
@@ -157,60 +157,48 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
-
 @app.route('/admin')
 @login_required('admin')
 def admin_dashboard():
-    sales = load_sales()
-    purchases = load_purchases()
-    items = load_items()
     now = datetime.now()
     today = now.date()
 
-    # Format sales dates
+    # Daten laden
+    sales = load_sales()
+    purchases = load_purchases()
+    items = load_items()
+
+    # Datumsformatierung für Sales
     for sale in sales:
         if isinstance(sale.get('date'), str):
             try:
                 sale['date'] = datetime.fromisoformat(sale['date'])
-            except ValueError:
+            except Exception:
                 sale['date'] = datetime.min
 
-    # Format purchase dates
+    # Datumsformatierung für Purchases
     for purchase in purchases:
         if isinstance(purchase.get('date'), str):
             try:
                 purchase['date'] = datetime.fromisoformat(purchase['date'])
-            except ValueError:
+            except Exception:
                 purchase['date'] = datetime.min
 
-    # Build lookup for purchase prices by barcode
-    barcode_to_purchase_price = {
-        item['barcode']: item.get('purchase_price', 0) for item in items
-    }
-
+    # Gewinnberechnung pro Verkauf & Gesamtgewinn
     all_time_profit = 0
-
     for s in sales:
         try:
             purchase_price = float(s.get('purchase_price', 0))
             sale_price = float(s.get('sale_price', 0))
             quantity = int(s.get('quantity', 0))
-
             profit = (sale_price - purchase_price) * quantity
             s['profit'] = round(profit, 2)
-
-            print(f"Sale: {s.get('name')}, Purchase Price: {purchase_price}, Sale Price: {sale_price}, Quantity: {quantity}, Profit: {profit}")
-
             all_time_profit += profit
-        except Exception as e:
-            print(f"Error processing sale {s}: {e}")
+        except Exception:
             s['profit'] = 0
-
     all_time_profit = round(all_time_profit, 2)
-    print(f"All-time profit: {all_time_profit}")
-    
 
-    # Daily totals
+    # Tages- und Monatswerte
     daily_sales_total = sum(
         s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
         for s in sales if s['date'].date() == today
@@ -221,7 +209,6 @@ def admin_dashboard():
     )
     daily_profit = round(daily_sales_total - daily_purchases_total, 2)
 
-    # Monthly totals
     monthly_sales = sum(
         s.get('total_price', s.get('sale_price', 0) * s.get('quantity', 0))
         for s in sales if s['date'].year == now.year and s['date'].month == now.month
@@ -232,17 +219,34 @@ def admin_dashboard():
     )
     monthly_profit = round(monthly_sales - monthly_purchases, 2)
 
-    # Sort for table display
+    # Sortierung
     sales_sorted = sorted(sales, key=lambda x: x['date'], reverse=True)
     purchases_sorted = sorted(purchases, key=lambda x: x['date'], reverse=True)
 
     # Wallet (Kasse)
     kasse_balance = load_kasse_balance()
-
-    # Kassenstand = Wallet + daily sales - daily purchases
     total_balance = round(kasse_balance + daily_sales_total - daily_purchases_total, 2)
-    print('total_price is ', all_time_profit)
-    # Send to template
+
+    # ⚠️ Benachrichtigungen für Artikel über 21 Tage
+    dismissed_alerts = load_json(ALERTS_DISMISS_FILE)
+    alert_threshold = now - timedelta(days=17)
+    notifications = []
+    for item in items:
+        item_date_str = item.get('added_date') or item.get('date')
+        if not item_date_str:
+            continue
+        try:
+            item_date = datetime.fromisoformat(item_date_str)
+        except Exception:
+            continue
+
+        if item_date < alert_threshold:
+            notifications.append({
+                "type": "warning",
+                "message": f"Produkt '{item.get('product_name', 'Unbekannt')}' ist seit über 17 Tagen im Lager. Bitte prüfen!",
+                "barcode": item.get('barcode', '')
+            })
+
     return render_template(
         "admin_dashboard.html",
         daily_profit=daily_profit,
@@ -251,9 +255,15 @@ def admin_dashboard():
         wallet_balance=kasse_balance,
         total_balance=total_balance,
         sales=sales_sorted,
-        purchases=purchases_sorted
+        purchases=purchases_sorted,
+        notifications=notifications
     )
 
+@app.template_filter('datetimeformat')
+def datetimeformat(value, format='%d.%m.%Y %H:%M'):
+    if isinstance(value, datetime):
+        return value.strftime(format)
+    return value
 
 
 
@@ -512,7 +522,8 @@ def add_seller():
         username = request.form['username']
         password = request.form['password']
         profile_img = request.form.get('profile_img', '')
-        salary = float(request.form.get('salary', 0.0))
+        salary_str = request.form.get('salary', '').strip()
+        salary = float(salary_str) if salary_str else 0.0
         activated = 'activated' in request.form
 
         sellers = load_users()
@@ -652,6 +663,7 @@ def add_item():
             flash(f'⚠️ Ein Artikel mit dem Barcode "{barcode}" existiert bereits!', 'danger')
             return redirect(url_for('add_item'))
 
+        # ✅ Create new item with added_date
         new_item = {
             "name": form_data['name'],
             "barcode": barcode,
@@ -661,7 +673,8 @@ def add_item():
             "quantity": int(form_data['quantity']),
             "photo_link": form_data.get('photo_link', ''),
             "description": form_data.get('description', ''),
-            "seller": session.get('username', 'unknown')
+            "seller": session.get('username', 'unknown'),
+            "added_date": datetime.now().isoformat()  # 🕒 Store timestamp
         }
 
         items.append(new_item)
@@ -1413,9 +1426,51 @@ def kasse():
         total_orders_today=total_orders_today,
         total_balance=total_balance
     )
+# Checking  the  items  after 21 Days
+from datetime import datetime, timedelta
 
+def get_old_inventory_alerts(items, days=21):
+    alerts = []
+    now = datetime.now()
+    threshold = timedelta(days=days)
 
+    for item in items:
+        date_str = item.get('added_date')
+        if not date_str:
+            continue  # skip items without date
+        try:
+            added_date = datetime.fromisoformat(date_str)
+        except Exception:
+            continue
+        if now - added_date > threshold:
+            alerts.append(item)
+    return alerts
 
+@app.route('/dismiss_alert', methods=['POST'])
+@login_required('admin')
+def dismiss_alert():
+    barcode = request.form.get('barcode')
+    if not barcode:
+        flash("⚠️ Ungültiger Barcode für Erinnerung.", "error")
+        return redirect(url_for('admin_dashboard'))
+
+    dismissed_alerts = load_json(ALERTS_DISMISS_FILE)
+
+    now = datetime.now()
+    remind_in_3_days = now + timedelta(days=3)
+
+    existing = next((d for d in dismissed_alerts if d.get('barcode') == barcode), None)
+    if existing:
+        existing['remind_date'] = remind_in_3_days.isoformat()
+    else:
+        dismissed_alerts.append({
+            "barcode": barcode,
+            "remind_date": remind_in_3_days.isoformat()
+        })
+
+    save_json(ALERTS_DISMISS_FILE, dismissed_alerts)
+    flash(f"⏳ Erinnerung für Produkt mit Barcode {barcode} wird in 3 Tagen wieder angezeigt.", "success")
+    return redirect(url_for('admin_dashboard'))
 
 if __name__ == '__main__':
     if not os.path.exists(DATA_PATH):
