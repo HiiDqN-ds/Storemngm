@@ -16,22 +16,6 @@
         "total_order_price": 190.0
     },
     {
-        "order_id": "759e534e-3112-4bd3-aec8-e46afa1f0d62",
-        "user": "user",
-        "date": "2025-07-06T09:54:41.456148",
-        "items": [
-            {
-                "barcode": "194471704773",
-                "product_name": "Iphone 14 Pro Max",
-                "quantity": 1,
-                "sale_price": 1200.0,
-                "total_price": 1200.0,
-                "purchase_price": 960.0
-            }
-        ],
-        "total_order_price": 1200.0
-    },
-    {
         "order_id": "5b1cbd43-f28a-4d64-9921-4a147014647e",
         "user": "admin",
         "date": "2025-07-06T10:01:23.844369",
@@ -46,5 +30,21 @@
             }
         ],
         "total_order_price": 1200.0
+    },
+    {
+        "order_id": "02bd14b0-2ae4-45d4-9aa8-785f847ae78e",
+        "user": "user",
+        "date": "2025-07-06T14:04:04.232435",
+        "items": [
+            {
+                "barcode": "875166911018",
+                "product_name": "galaxy A266",
+                "quantity": 1,
+                "sale_price": 350.0,
+                "total_price": 350.0,
+                "purchase_price": 300.0
+            }
+        ],
+        "total_order_price": 350.0
     }
 ]

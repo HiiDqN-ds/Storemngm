@@ -291,16 +291,7 @@ def admin_dashboard():
         mailbox_notifications=mailbox_notifications
     )
 
-
-
-
-
-
-
 # Load_kasse_balance
-import os
-import json
-
 def load_kasse_balance():
     kasse_file = os.path.join('data', 'kasse.json')
     transactions = []
@@ -440,68 +431,83 @@ def download_purchases_csv():
     return generate_csv(purchases, fieldnames)
 
 
+from flask import session, render_template
+from datetime import datetime
+
+from datetime import datetime
+
 @app.route('/seller')
 @login_required('seller')
 def seller_dashboard():
     username = session['username']
 
-    sales_data = load_sales()    # loads list of orders, each with 'items' list
-    purchases_data = load_purchases()  # load purchases similarly
+    sales_data = load_sales()
+    purchases_data = load_purchases()
 
-    # Flatten sales: get only sales for this user and flatten items
-    flat_sales = []
-    for order in sales_data:
-        if order.get('user') != username:
-            continue
-        order_date = order.get('date')
-        for item in order.get('items', []):
-            profit = (item.get('sale_price', 0) - item.get('purchase_price', 0)) * item.get('quantity', 0)
-            flat_sales.append({
-                'date': datetime.fromisoformat(order_date) if order_date else None,
-                'name': item.get('product_name', 'Unbekannt'),
-                'quantity': item.get('quantity', 0),
-                'sale_price': item.get('sale_price', 0),
-                'total_price': item.get('total_price', 0),
-                'profit': profit
-            })
+    user_orders = [order for order in sales_data if order.get('user') == username]
+    user_purchases = [p for p in purchases_data if p.get('user') == username]
 
-    # Prepare purchases similarly (depending on your purchases data structure)
-    flat_purchases = []
-    for p in purchases_data:
-        if p.get('user') != username:
-            continue
-        p_date = p.get('date')
-        flat_purchases.append({
-            'date': datetime.fromisoformat(p_date) if p_date else None,
-            'product_name': p.get('product_name', 'Unbekannt'),
-            'quantity': p.get('quantity', 0),
-            'purchase_price': p.get('price', 0),
-            'total_price': p.get('total_price', 0),
-        })
-
-    # Example daily profit (sum of profits for today)
     today = datetime.now().date()
-    daily_profit = sum(
-        s['profit'] for s in flat_sales
-        if s['date'] and s['date'].date() == today
-    )
 
-    # Example total balance (sum of profits minus sum of purchase costs)
-    total_profit = sum(s['profit'] for s in flat_sales)
-    total_purchase_cost = sum(p['purchase_price'] * p['quantity'] for p in flat_purchases)
+    daily_sales_total = 0.0
+    daily_purchases_total = 0.0  # <-- Initialize here
+    daily_profit = 0
+    monthly_profit = 0
+    total_profit = 0
+    monthly_total_order_price = 0
+
+    # Calculate daily sales total and profits
+    for order in user_orders:
+        order_date = datetime.fromisoformat(order['date']) if order.get('date') else None
+
+        if order_date:
+            # Total daily sales (Umsatz)
+            if order_date.date() == today:
+                for item in order.get('items', []):
+                    daily_sales_total += item.get('total_price', 0)
+
+        order_profit = 0
+        for item in order.get('items', []):
+            item_profit = (item.get('sale_price', 0) - item.get('purchase_price', 0)) * item.get('quantity', 0)
+            order_profit += item_profit
+
+        if order_date:
+            # Sum monthly profit
+            if order_date.year == today.year and order_date.month == today.month:
+                monthly_profit += order_profit
+                monthly_total_order_price += order.get('total_order_price', 0)
+
+            # Sum daily profit
+            if order_date.date() == today:
+                daily_profit += order_profit
+
+        total_profit += order_profit
+
+    # Calculate daily purchases total outside the order loop
+    for purchase in user_purchases:
+        purchase_date = datetime.fromisoformat(purchase.get('date')) if purchase.get('date') else None
+        if purchase_date and purchase_date.date() == today:
+            daily_purchases_total += purchase.get('price', 0) * purchase.get('quantity', 0)
+
+    total_purchase_cost = sum(p.get('price', 0) * p.get('quantity', 0) for p in user_purchases)
     total_balance = total_profit - total_purchase_cost
-
-    # Example monthly profit sum
-    monthly_profit = sum(s['profit'] for s in flat_sales)  # You can enhance by grouping by month if you want
 
     return render_template(
         'seller_dashboard.html',
-        sales=flat_sales,
-        purchases=flat_purchases,
+        sales=user_orders,
+        purchases=user_purchases,
         daily_profit=daily_profit,
+        monthly_profit=monthly_profit,
+        total_profit=total_profit,
+        total_purchase_cost=total_purchase_cost,
         total_balance=total_balance,
-        monthly_profit=monthly_profit
+        monthly_total_order_price=monthly_total_order_price,
+        daily_sales_total=daily_sales_total,
+        daily_purchases_total=daily_purchases_total,
     )
+
+
+
 
 
 
@@ -570,9 +576,6 @@ def add_seller():
         return redirect(url_for('list_sellers'))
 
     return render_template('add_seller.html')
-
-
-
 
 # Admin: Edit Seller
 @app.route('/admin/sellers/edit/<username>', methods=['GET', 'POST'])
@@ -720,7 +723,7 @@ def delete_sale(order_id, barcode):
     item = next((i for i in items if i['barcode'] == barcode), None)
     if not item:
         flash('Artikel nicht gefunden', 'danger')
-        return redirect(url_for('admin_sales'))
+        return redirect(url_for('seller_sales'))
 
     items.remove(item)
 
@@ -731,7 +734,6 @@ def delete_sale(order_id, barcode):
     save_sales(sales)
     flash(f"Verkauf von {item['quantity']} × {item.get('product_name', 'Artikel')} gelöscht.", 'warning')
     return redirect(url_for('admin_sales'))
-
 
 # Add Item
 @app.route('/admin/add_item', methods=['GET', 'POST'])
@@ -768,10 +770,6 @@ def add_item():
         return redirect(url_for('list_items'))
 
     return render_template('add_item.html', item=None)
-
-
-
-
 
 # Admin: Edit Item
 @app.route('/admin/items/edit/<barcode>', methods=['GET', 'POST'])
@@ -822,9 +820,6 @@ def delete_item(barcode):
     save_items(items)
     flash('Item deleted', 'success')
     return redirect(url_for('list_items'))
-
-
-
 
 @app.route('/sell', methods=['GET', 'POST'])
 def sell_item():
@@ -945,7 +940,6 @@ def sell_item():
 
     # GET: render the sell form
     return render_template('sell_item.html', items=items)
-
 
 # Seller: Seller History
 @app.route('/seller/sales')
@@ -1137,8 +1131,6 @@ def order():
 
     return render_template('order_item.html', numero_unique=numero_unique)
 
-
-# Update  Quantity
 # Update Quantity
 @app.route('/update_quantity', methods=['POST'])
 @login_required('admin')  # oder 'seller' falls nötig
@@ -1198,16 +1190,9 @@ def update_quantity():
 
     return redirect(url_for('list_items'))
 
-
-
-
-
-
-
 def load_items_for_seller(username):
     all_items = load_items()
     return [item for item in all_items if item.get('seller') == username]
-
 
 # Load normalize_items
 def normalize_items(items):
@@ -1238,7 +1223,6 @@ def load_items_for_seller(username):
             filtered_items.append(item)
     return filtered_items
 
-
 # List all the items for the seller
 @app.route('/seller/items')
 @login_required('seller')
@@ -1248,9 +1232,6 @@ def seller_items():
     items = normalize_items(items)  # Ensure all items have 'name'
     items = items[::-1]
     return render_template('seller_items.html', items=items)
-
-
-
 
 # List all the Orders
 @app.route('/orders')
@@ -1474,22 +1455,6 @@ def kasse():
         total_orders_today=total_orders_today,
         total_balance=total_balance
     )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # Dimiss Alerts
