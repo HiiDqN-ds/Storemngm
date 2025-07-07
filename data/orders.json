@@ -28,5 +28,61 @@
     "user": "admin",
     "barcode": "barcodes/code_barres_669457549563",
     "photo": ""
+  },
+  {
+    "order_number": "131208439539",
+    "product_name": "galaxy A26fff",
+    "ref_number": "",
+    "description": "",
+    "price": 156.0,
+    "selling_price": 180.0,
+    "min_selling_price": 190.0,
+    "quantity": 15,
+    "total_price": 2340.0,
+    "date": "2025-07-07",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_131208439539"
+  },
+  {
+    "order_number": "439638133100",
+    "product_name": "handy2",
+    "ref_number": "999999999999",
+    "description": "",
+    "price": 60.0,
+    "selling_price": 60.0,
+    "min_selling_price": 60.0,
+    "quantity": 50,
+    "total_price": 3000.0,
+    "date": "2025-07-07",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_439638133100"
+  },
+  {
+    "order_number": "784931831345",
+    "product_name": "ff",
+    "ref_number": null,
+    "description": "",
+    "price": 99.0,
+    "selling_price": 99.0,
+    "min_selling_price": 99.0,
+    "quantity": 1,
+    "total_price": 99.0,
+    "date": "2025-07-07",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_784931831345"
+  },
+  {
+    "order_number": "7777777777777",
+    "product_name": "qqqqqqqqqqqqqqqqq",
+    "ref_number": "7777777777777",
+    "description": "",
+    "price": 4180.0,
+    "selling_price": 4180.0,
+    "min_selling_price": 4180.0,
+    "quantity": 1,
+    "total_price": 4180.0,
+    "date": "2025-07-07",
+    "user": "admin",
+    "barcode": "barcodes/code_barres_7777777777777"
   }
 ]

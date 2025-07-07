@@ -949,15 +949,11 @@ def pay_salary():
         return redirect(url_for('pay_salary'))
 
     return render_template('pay_salary.html', users=users)
-
-# order a  new item
 @app.route('/order', methods=['GET', 'POST'])
 def order():
     if session.get('role') not in ['admin', 'seller']:
         flash('Zugriff verweigert.', 'danger')
         return redirect(url_for('index'))
-
-    numero_unique = None
 
     if request.method == 'POST':
         try:
@@ -969,18 +965,16 @@ def order():
             min_selling_price = float(request.form['min_selling_price'])
             quantity = int(request.form['quantity'])
 
-            # Validate prices and quantity positive
             if price < 0 or selling_price < 0 or min_selling_price < 0 or quantity < 1:
                 raise ValueError("Preise und Menge müssen positiv sein.")
         except (ValueError, KeyError) as e:
             flash('Ungültige Eingabe: ' + str(e), 'danger')
             return redirect(url_for('order'))
 
-        total_price = round(price * quantity, 2)
         today = datetime.now().strftime('%Y-%m-%d')
         username = session.get('username', 'unbekannt')
 
-        # Generate unique 12-digit barcode
+        # Function to generate a unique 12-digit barcode
         def generate_unique_barcode():
             while True:
                 code = ''.join(str(random.randint(0, 9)) for _ in range(12))
@@ -1004,22 +998,26 @@ def order():
                 if not exists:
                     return code
 
-        numero_unique = generate_unique_barcode()
+        # Determine final barcode to use
+        if ref_number:
+            barcode_number = ref_number
+        else:
+            barcode_number = generate_unique_barcode()
 
         # Save barcode image
         barcode_dir = os.path.join(app.static_folder, 'barcodes')
         os.makedirs(barcode_dir, exist_ok=True)
-        barcode_path = os.path.join(barcode_dir, f'code_barres_{numero_unique}')
+        barcode_path = os.path.join(barcode_dir, f'code_barres_{barcode_number}')
         ean = barcode.get_barcode_class('ean13')
-        code = ean(numero_unique, writer=ImageWriter())
+        code = ean(barcode_number, writer=ImageWriter())
         code.save(barcode_path)
 
-        
+        total_price = round(price * quantity, 2)
 
         new_order = {
-            "order_number": numero_unique,
+            "order_number": barcode_number,
             "product_name": product_name,
-            "ref_number": ref_number,
+            "ref_number": ref_number if ref_number else None,
             "description": description,
             "price": price,
             "selling_price": selling_price,
@@ -1028,30 +1026,30 @@ def order():
             "total_price": total_price,
             "date": today,
             "user": username,
-            "barcode": f"barcodes/code_barres_{numero_unique}"
+            "barcode": f"barcodes/code_barres_{barcode_number}"
         }
 
-        # Load existing orders
+        # Save to orders
         orders = []
         if os.path.exists(ORDERS_FILE):
             with open(ORDERS_FILE, 'r', encoding='utf-8') as f:
                 try:
                     orders = json.load(f)
                 except json.JSONDecodeError:
-                    orders = []
+                    pass
 
         orders.append(new_order)
         with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
             json.dump(orders, f, indent=2, ensure_ascii=False)
 
-        # Update inventory items.json
+        # Save to items
         items = []
         if os.path.exists(ITEMS_FILE):
             with open(ITEMS_FILE, 'r', encoding='utf-8') as f:
                 try:
                     items = json.load(f)
                 except json.JSONDecodeError:
-                    items = []
+                    pass
 
         found = False
         for item in items:
@@ -1061,30 +1059,30 @@ def order():
                 item['selling_price'] = selling_price
                 item['min_selling_price'] = min_selling_price
                 item['description'] = description
-                
+                found = True
                 break
 
         if not found:
             new_item = {
                 "product_name": product_name,
-                "barcode": numero_unique,
+                "barcode": barcode_number,
                 "purchase_price": price,
                 "selling_price": selling_price,
                 "min_selling_price": min_selling_price,
                 "quantity": quantity,
                 "description": description,
                 "seller": username,
-                "date": today   # ✅ Add this line to include the current date
+                "date": today  # human-readable date format
             }
             items.append(new_item)
 
         with open(ITEMS_FILE, 'w', encoding='utf-8') as f:
             json.dump(items, f, indent=2, ensure_ascii=False)
 
-        flash('Bestellung erfolgreich aufgegeben und Inventar aktualisiert!', 'success')
+        flash('✅ Bestellung erfolgreich aufgegeben und Inventar aktualisiert!', 'success')
         return redirect(url_for('list_orders'))
 
-    return render_template('order_item.html', numero_unique=numero_unique)
+    return render_template('order_item.html')
 
 # Update Quantity
 @app.route('/update_quantity', methods=['POST'])
