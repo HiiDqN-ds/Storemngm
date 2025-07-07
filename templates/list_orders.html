@@ -48,7 +48,7 @@
         </thead>
         <tbody>
           {% if orders %}
-            {% for order in orders %}
+            {% for order in orders|sort(attribute='date')|reverse %}
             <tr>
               <td>{{ order.product_name }}</td>
               <td>{{ order.order_number }}</td>

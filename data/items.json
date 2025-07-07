@@ -82,37 +82,15 @@
   {
     "product_name": "galaxy A26",
     "barcode": "141376356710",
-    "purchase_price": 60.0,
-    "selling_price": 80.0,
-    "min_selling_price": 80.0,
-    "quantity": 50,
+    "purchase_price": 98.0,
+    "selling_price": 98.0,
+    "min_selling_price": 98.0,
+    "quantity": 51,
     "photo_link": "",
     "description": "",
     "seller": "admin",
     "name": "galaxy A26",
     "price": 15.0
-  },
-  {
-    "product_name": "sadsa",
-    "barcode": "269308517633",
-    "purchase_price": 15.0,
-    "selling_price": 15.0,
-    "min_selling_price": 117.0,
-    "quantity": 50,
-    "photo_link": "",
-    "description": "",
-    "seller": "user"
-  },
-  {
-    "product_name": "817241420900",
-    "barcode": "931010696202",
-    "purchase_price": 650.0,
-    "selling_price": 780.0,
-    "min_selling_price": 720.0,
-    "quantity": 50,
-    "photo_link": "",
-    "description": "",
-    "seller": "admin"
   },
   {
     "product_name": "Charger USB c",
@@ -123,7 +101,9 @@
     "quantity": 50,
     "photo_link": "",
     "description": "",
-    "seller": "admin"
+    "seller": "admin",
+    "name": "Charger USB c",
+    "price": 30.0
   },
   {
     "product_name": "Laptop",
@@ -134,7 +114,9 @@
     "quantity": 6,
     "photo_link": "",
     "description": "",
-    "seller": "admin"
+    "seller": "admin",
+    "name": "Laptop",
+    "price": 850.0
   },
   {
     "product_name": "galaxy A26fff",
@@ -145,39 +127,20 @@
     "quantity": 15,
     "description": "",
     "seller": "admin",
-    "date": "2025-07-07"
+    "date": "2025-07-07",
+    "name": "galaxy A26fff",
+    "price": 180.0,
+    "photo_link": ""
   },
   {
-    "product_name": "handy2",
-    "barcode": "439638133100",
-    "purchase_price": 60.0,
-    "selling_price": 60.0,
-    "min_selling_price": 60.0,
-    "quantity": 50,
-    "description": "",
-    "seller": "admin",
-    "date": "2025-07-07"
-  },
-  {
-    "product_name": "ff",
-    "barcode": "784931831345",
-    "purchase_price": 99.0,
-    "selling_price": 99.0,
-    "min_selling_price": 99.0,
+    "product_name": "hfghfghh",
+    "barcode": "951853400218",
+    "purchase_price": 50.0,
+    "selling_price": 50505.0,
+    "min_selling_price": 50.0,
     "quantity": 1,
     "description": "",
-    "seller": "admin",
-    "date": "2025-07-07"
-  },
-  {
-    "product_name": "qqqqqqqqqqqqqqqqq",
-    "barcode": "7777777777777",
-    "purchase_price": 4180.0,
-    "selling_price": 4180.0,
-    "min_selling_price": 4180.0,
-    "quantity": 1,
-    "description": "",
-    "seller": "admin",
+    "seller": "user",
     "date": "2025-07-07"
   }
 ]
