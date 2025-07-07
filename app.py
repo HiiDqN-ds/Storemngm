@@ -277,6 +277,31 @@ def admin_dashboard():
                 'message': f"⚠️ Niedriger Lagerbestand für '{item.get('product_name', 'Unbekannt')}' – nur noch {item.get('quantity')} Stück!",
                 'barcode': item.get('barcode', '')
             })
+     # ========== Mailbox Notifications ==========
+    mailbox_notifications = []
+    today = datetime.today()
+
+    for item in items:
+        # Benachrichtigung, wenn Menge <= 5
+        if item.get('quantity', 0) <= 5:
+            mailbox_notifications.append({
+                'date': today.isoformat(),
+                'message': f"❗ Geringer Lagerbestand für Produkt: {item.get('product_name', 'Unbekannt')} (Menge: {item.get('quantity', 0)})",
+                'barcode': item.get('barcode', 'unknown')
+            })
+
+        # Benachrichtigung, wenn Produkt älter als 21 Tage im Lager ist
+        date_str = item.get('date_added') or item.get('date')
+        try:
+            date_added = datetime.fromisoformat(date_str)
+            if (today - date_added).days > 21:
+                mailbox_notifications.append({
+                    'date': today.isoformat(),
+                    'message': f"⏳ Produkt '{item.get('product_name', 'Unbekannt')}' ist seit über 21 Tagen im Lager.",
+                    'barcode': item.get('barcode', 'unknown')
+                })
+        except Exception as e:
+            print("Fehler beim Datum:", e)
 
     return render_template(
         "admin_dashboard.html",
@@ -701,10 +726,9 @@ def add_item():
             "selling_price": float(form_data['selling_price']),
             "min_selling_price": float(form_data['min_selling_price']),
             "quantity": int(form_data['quantity']),
-            "photo_link": form_data.get('photo_link', ''),
             "description": form_data.get('description', ''),
             "seller": session.get('username', 'unknown'),
-            "added_date": datetime.now().isoformat()  # 🕒 Store timestamp
+           "added_date": datetime.now().strftime('%Y-%m-%d')# 🕒 Store timestamp
         }
 
         items.append(new_item)
@@ -990,16 +1014,7 @@ def order():
         code = ean(numero_unique, writer=ImageWriter())
         code.save(barcode_path)
 
-        # Handle photo upload if present
-        photo_filename = ""
-        if 'photo' in request.files:
-            photo = request.files['photo']
-            if photo and allowed_file(photo.filename):
-                ext = photo.filename.rsplit('.', 1)[1].lower()
-                filename = f"{numero_unique}.{ext}"
-                secure_name = secure_filename(filename)
-                photo.save(os.path.join(UPLOAD_FOLDER, secure_name))
-                photo_filename = f"uploads/{secure_name}"
+        
 
         new_order = {
             "order_number": numero_unique,
@@ -1013,8 +1028,7 @@ def order():
             "total_price": total_price,
             "date": today,
             "user": username,
-            "barcode": f"barcodes/code_barres_{numero_unique}",
-            "photo": photo_filename
+            "barcode": f"barcodes/code_barres_{numero_unique}"
         }
 
         # Load existing orders
@@ -1047,9 +1061,7 @@ def order():
                 item['selling_price'] = selling_price
                 item['min_selling_price'] = min_selling_price
                 item['description'] = description
-                if photo_filename:
-                    item['photo_link'] = photo_filename
-                found = True
+                
                 break
 
         if not found:
@@ -1060,9 +1072,9 @@ def order():
                 "selling_price": selling_price,
                 "min_selling_price": min_selling_price,
                 "quantity": quantity,
-                "photo_link": photo_filename,
                 "description": description,
-                "seller": username
+                "seller": username,
+                "date": today   # ✅ Add this line to include the current date
             }
             items.append(new_item)
 

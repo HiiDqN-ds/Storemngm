@@ -40,7 +40,6 @@
             <th>Min Verkaufspreis (€)</th>
             <th>Menge</th>
             <th>Beschreibung</th>
-            <th>Photo</th>
             <th>Gesamtpreis (€)</th>
             <th>Datum</th>
             <th>Benutzer</th>
@@ -58,13 +57,7 @@
               <td>{{ order.min_selling_price | default(0) | round(2) }}</td>
               <td>{{ order.quantity }}</td>
               <td>{{ order.description or '-' }}</td>
-              <td>
-                {% if order.photo %}
-                  <img src="{{ url_for('static', filename=order.photo) }}" style="max-width: 80px;">
-                {% else %}
-                  -
-                {% endif %}
-              </td>
+              
               <td>€{{ order.total_price | default(0) | round(2) }}</td>
               <td>{{ order.date }}</td>
               <td>{{ order.user }}</td>
