@@ -1,87 +1,74 @@
 {% extends "base.html" %}
-{% block title %}Meine Verkäufe{% endblock %}
+
+{% block title %}Verkaufsverlauf Admin{% endblock %}
 
 {% block content %}
-<div class="table-responsive">
-  <h2>Meine Verkäufe</h2>
-  <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname..." onkeyup="filterTable()">
+<h2>Gesamter Verkaufsverlauf</h2>
 
-  <table class="table table-striped">
-    <thead>
-      <tr>
-        <th>#</th>
-        <th>Produkt</th>
-        <th>Menge</th>
-        <th>Preis pro Stück (€)</th>
-        <th>Gesamtpreis (€)</th>
-        <th>Datum</th>
-        <th>Aktionen</th>
-      </tr>
-    </thead>
-    {% set counter = 1 %}
-{% for order in sales %}
-  {% set receipt_button_shown = False %}
-  {% for item in order["items"] %}
-    <tr>
-      <td>{{ counter }}</td>
-      <td>{{ item.product_name | default('Unbekannt') }}</td>
-      <td>{{ item.quantity | default(0) }}</td>
-      <td>{{ "%.2f"|format(item.sale_price | float(0)) }}</td>
-      <td>{{ "%.2f"|format(item.total_price | float(0)) }}</td>
-      <td>{{ order.date[:10] | default('') }}</td>
-      <td class="d-flex gap-1 flex-wrap">
-        {# ✅ Show receipt button only once per order #}
-        {% if not receipt_button_shown %}
-          <button
-            onclick='showReceiptInPopup({{ order | tojson | safe }})'
-            class="btn btn-sm btn-primary"
-            title="Quittung für Bestellung"
-          >
-            <i class="bi bi-receipt"></i>
+<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Verkäufer oder Barcode..." onkeyup="filterOrders()">
+
+<div id="sales-container">
+  {% for order in sales %}
+    <div class="card mb-4 p-3 shadow-sm">
+      <h5><strong>Verkäufer:</strong> {{ order.user }}</h5>
+      <p><strong>Datum:</strong> {{ order.date.replace("T", " ")[:19] }}</p>
+
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Produkt</th>
+              <th>Barcode</th>
+              <th>Menge</th>
+              <th>Stückpreis (€)</th>
+              <th>Gesamt (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.get("items", []) %}
+            <tr>
+              <td>{{ item.product_name }}</td>
+              <td>{{ item.barcode }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ "%.2f"|format(item.sale_price) }} €</td>
+              <td>{{ "%.2f"|format(item.total_price) }} €</td>
+              
+                
+              
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+
+      <div class="d-flex justify-content-between align-items-center">
+        <h5>Gesamtsumme: <span style="color: green;">€{{ "%.2f"|format(order.total_order_price) }}</span></h5>
+       <!-- Quittung Button -->
+          <button onclick='showReceiptInPopup({{ order | tojson | safe }})'
+                  class="btn btn-sm btn-primary" title="Quittung anzeigen">
+            <i class="bi bi-receipt"> Quittung</i>
           </button>
-          {% set receipt_button_shown = True %}
-        {% endif %}
-
-        <!-- Edit button (still per item) -->
-        <a href="{{ url_for('edit_sale', order_id=order.order_id, barcode=item.barcode | default('')) }}"
-           class="btn btn-sm btn-warning" title="Bearbeiten">
-          <i class="bi bi-pencil-square"></i>
-        </a>
-
-        <!-- Delete button (still per item) -->
-        <form method="post" action="{{ url_for('delete_sale', order_id=order.order_id, barcode=item.barcode | default('')) }}"
-              onsubmit="return confirm('Verkauf wirklich löschen?')">
-          <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
-            <i class="bi bi-trash"></i>
-          </button>
-        </form>
-      </td>
-    </tr>
-    {% set counter = counter + 1 %}
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-center">❌ Keine Verkäufe gefunden.</p>
   {% endfor %}
-{% else %}
-  <tr><td colspan="7" class="text-center">Keine Verkäufe gefunden.</td></tr>
-{% endfor %}
-
-  </table>
 </div>
 
 <script>
-function filterTable() {
-  const input = document.getElementById("searchInput");
-  const filter = input.value.toLowerCase();
-  const rows = document.querySelectorAll("table tbody tr");
+function filterOrders() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const orders = document.querySelectorAll("#sales-container .card");
 
-  rows.forEach(row => {
-    const productName = row.cells[1].textContent.toLowerCase();
-    row.style.display = productName.includes(filter) ? "" : "none";
+  orders.forEach(order => {
+    const text = order.textContent.toLowerCase();
+    order.style.display = text.includes(input) ? "" : "none";
   });
 }
 
-
 function showReceiptInPopup(order) {
-  const username = "{{ session['username'] | e }}";
-
   let itemsHTML = "";
   order.items.forEach(item => {
     itemsHTML += `
@@ -91,8 +78,7 @@ function showReceiptInPopup(order) {
         <td>${item.quantity}</td>
         <td>${item.sale_price.toFixed(2)} €</td>
         <td>${item.total_price.toFixed(2)} €</td>
-      </tr>
-    `;
+      </tr>`;
   });
 
   const receiptHTML = `
@@ -101,14 +87,12 @@ function showReceiptInPopup(order) {
     <head>
       <title>Verkaufsquittung</title>
       <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h3, h4 { margin-top: 0; }
-        table { width: 100%; font-size: 0.95em; border-collapse: collapse; }
-        td, th { padding: 6px 10px; border: 1px solid #ccc; text-align: left; }
-        hr { margin: 20px 0; }
-        .header { display: flex; align-items: center; margin-bottom: 20px; }
-        .header img { height: 60px; margin-right: 15px; }
-        .footer { font-size: 0.8em; text-align: right; margin-top: 20px; }
+        body { font-family: Arial; padding: 20px; }
+        .header { display: flex; align-items: center; }
+        .header img { height: 60px; margin-right: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td, th { border: 1px solid #ccc; padding: 8px; }
+        h3, h4 { margin-bottom: 10px; }
       </style>
     </head>
     <body onload="window.print()">
@@ -117,16 +101,11 @@ function showReceiptInPopup(order) {
         <div>
           <h3>Meine Firma</h3>
           <p>Musterstraße 1, 12345 Musterstadt</p>
-          <p>Tel: 01234 567890 | info@meinefirma.de</p>
         </div>
       </div>
-
       <hr>
-
-      <h4>Verkaufsquittung</h4>
-      <p><strong>Bestellnummer:</strong> ${order.order_id}</p>
+      <h4>Verkäufer: ${order.user}</h4>
       <p><strong>Datum:</strong> ${order.date.replace("T", " ").slice(0, 19)}</p>
-      <p><strong>Verkäufer:</strong> ${username}</p>
 
       <table>
         <thead>
@@ -138,31 +117,18 @@ function showReceiptInPopup(order) {
             <th>Gesamt (€)</th>
           </tr>
         </thead>
-        <tbody>
-          ${itemsHTML}
-        </tbody>
+        <tbody>${itemsHTML}</tbody>
       </table>
 
       <h4 style="text-align: right;">Gesamtsumme: <span style="color: green;">€${order.total_order_price.toFixed(2)}</span></h4>
-
-      <p class="footer">Vielen Dank für Ihren Einkauf!</p>
+      <p style="text-align:right;">Vielen Dank für Ihren Einkauf!</p>
     </body>
     </html>
   `;
 
-  const receiptWindow = window.open('', '_blank', 'width=800,height=600');
-  if (receiptWindow) {
-    receiptWindow.document.open();
-    receiptWindow.document.write(receiptHTML);
-    receiptWindow.document.close();
-  } else {
-    alert("Pop-up Fenster blockiert. Bitte erlaube Pop-ups.");
-  }
+  const popup = window.open('', '_blank', 'width=800,height=600');
+  popup.document.write(receiptHTML);
+  popup.document.close();
 }
-
-
-
-
-
 </script>
 {% endblock %}

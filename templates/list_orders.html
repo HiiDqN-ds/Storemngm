@@ -31,70 +31,75 @@
 <input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Produktname oder Barcode..." onkeyup="filterTable()">
 <div style="overflow-x: auto;">
       <table class="table table-bordered w-100">
-<thead>
-  <tr>
-    <th>Produktname</th>
-    <th>Barcode</th>
-    <th>Einkaufspreis (€)</th>
-    <th>Verkaufspreis (€)</th>
-    <th>Min Verkaufspreis (€)</th>
-    <th>Menge</th>
-    <th>Beschreibung</th>
-    <th>Photo</th>
-    <th>Gesamtpreis (€)</th>
-    <th>Datum</th>
-    <th>Benutzer</th>
-    <th>Aktionen</th>
-  </tr>
-</thead>
-<tbody>
-  {% if orders %}
-    {% for order in orders %}
-    <tr>
-      <td>{{ order.product_name }}</td>
-      <td>{{ order.order_number }}</td>
-      <td>{{ order.price | default(0) | round(2) }}</td>
-      <td>{{ order.selling_price | default(0) | round(2) }}</td>
-      <td>{{ order.min_selling_price | default(0) | round(2) }}</td>
-      <td>{{ order.quantity }}</td>
-      <td>{{ order.description or '-' }}</td>
-      <td>
-        {% if order.photo %}
-          <img src="{{ url_for('static', filename=order.photo) }}" style="max-width: 80px;">
-        {% else %}
-          -
-        {% endif %}
-      </td>
-      <td>€{{ order.total_price | default(0) | round(2) }}</td>
-      <td>{{ order.date }}</td>
-      <td>{{ order.user }}</td>
-      <td class="text-nowrap">
-        <button class="btn btn-outline-primary btn-sm me-1" title="Quittung drucken" onclick="printReceipt({{ loop.index0 }})">
-          <i class="bi bi-receipt me-1"></i>
-        </button>
-        <button class="btn btn-outline-primary btn-sm me-1" title="Code drucken" onclick="printQRCode({{ loop.index0 }})">
-          <i class="bi bi-upc-scan"></i>
-        </button>
-        <a href="{{ url_for('edit_order', index=loop.index0) }}" class="btn btn-sm btn-warning me-1" title="Bearbeiten">
-          <i class="bi bi-pencil-square"></i>
-        </a>
-        <form action="{{ url_for('delete_order', index=loop.index0) }}" method="post" style="display:inline;" onsubmit="return confirm('Bist du sicher?');">
-          <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
-            <i class="bi bi-trash"></i>
-          </button>
-        </form>
-      </td>
-    </tr>
-    {% endfor %}
-  {% else %}
-    <tr>
-      <td colspan="12" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
-    </tr>
-  {% endif %}
-</tbody>
+        <thead>
+          <tr>
+            <th>Produktname</th>
+            <th>Barcode</th>
+            <th>Einkaufspreis (€)</th>
+            <th>Verkaufspreis (€)</th>
+            <th>Min Verkaufspreis (€)</th>
+            <th>Menge</th>
+            <th>Beschreibung</th>
+            <th>Photo</th>
+            <th>Gesamtpreis (€)</th>
+            <th>Datum</th>
+            <th>Benutzer</th>
+            <th>Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% if orders %}
+            {% for order in orders %}
+            <tr>
+              <td>{{ order.product_name }}</td>
+              <td>{{ order.order_number }}</td>
+              <td>{{ order.price | default(0) | round(2) }}</td>
+              <td>{{ order.selling_price | default(0) | round(2) }}</td>
+              <td>{{ order.min_selling_price | default(0) | round(2) }}</td>
+              <td>{{ order.quantity }}</td>
+              <td>{{ order.description or '-' }}</td>
+              <td>
+                {% if order.photo %}
+                  <img src="{{ url_for('static', filename=order.photo) }}" style="max-width: 80px;">
+                {% else %}
+                  -
+                {% endif %}
+              </td>
+              <td>€{{ order.total_price | default(0) | round(2) }}</td>
+              <td>{{ order.date }}</td>
+              <td>{{ order.user }}</td>
+              <td class="text-nowrap">
+                <button class="btn btn-outline-primary btn-sm me-1" title="Quittung drucken" onclick="printReceipt({{ loop.index0 }})">
+                  <i class="bi bi-receipt me-1"></i>
+                </button>
+                <button class="btn btn-outline-primary btn-sm me-1" title="Code drucken" onclick="printQRCode({{ loop.index0 }})">
+                  <i class="bi bi-upc-scan"></i>
+                </button>
+
+                {% if session['role'] == 'admin' %}
+                  <a href="{{ url_for('edit_order', order_number=order.order_number) }}" class="btn btn-sm btn-warning me-1" title="Bearbeiten">
+                    <i class="bi bi-pencil-square"></i>
+                  </a>
+                {% endif %}
+
+                <form action="{{ url_for('delete_order', order_number=order.order_number) }}" method="post" style="display:inline;" onsubmit="return confirm('Bist du sicher?');">
+                  <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </form>
+              </td>
+
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="12" class="text-center text-muted">Keine Bestellungen vorhanden.</td>
+            </tr>
+          {% endif %}
+        </tbody>
 
 
-</table>
+        </table>
     </div>
 </div>
 

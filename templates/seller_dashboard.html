@@ -9,13 +9,12 @@
 <div class="stats" style="display: flex; gap: 40px; margin-bottom: 25px; flex-wrap: wrap;">
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
     <h2>Tägliche Einnahmen inkl. Wallet</h2>
-      <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(daily_sales_total - daily_purchases_total) }}</p>
+      <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(total_balance|default(0)) }}</p>
   </div>
 
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
     <h2>Kasse</h2>
-      <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(daily_sales_total - daily_purchases_total) }}</p>
-  </div>
+      <p style="font-size: 2em; font-weight: bold; margin: 0;">€{{ "{:,.2f}".format(total_balance|default(0)) }}</p>  </div>
 
   <div class="stat-box" style="flex: 1; min-width: 140px; padding: 20px; border: 1px solid #ddd; border-radius: 10px; background: #f9f9f9; text-align: center;">
     <h2>Gesamt pro Monat</h2>
@@ -95,21 +94,23 @@
       </tr>
     </thead>
 
-    <tbody>
-      {% for purchase in purchases %}
-      <tr style="background: white; border-bottom: 1px solid #ccc;">
-        <td>{{ purchase.date | datetimeformat('%d.%m.%Y %H:%M') if purchase.date else '-' }}</td>
-        <td>{{ purchase.product_name or 'Unbekannt' }}</td>
-        <td style="text-align:center;">{{ purchase.quantity or 0 }}</td>
-        <td style="text-align:right;">€{{ "%.2f"|format(purchase.price | default(0)) }}</td>
-        <td style="text-align:right;">€{{ "%.2f"|format(purchase.total_price | default(0)) }}</td>
-      </tr>
-      {% else %}
-      <tr>
-        <td colspan="5" style="text-align:center; font-style: italic; color: #555;">Keine Einkaufsdaten vorhanden.</td>
-      </tr>
-      {% endfor %}
-    </tbody>
+   <tbody>
+  {% for purchase in purchases %}
+  <tr style="background: white; border-bottom: 1px solid #ccc;">
+    <td>{{ purchase.date | datetimeformat('%d.%m.%Y %H:%M') if purchase.date else '-' }}</td>
+    <td>{{ purchase.product_name or 'Unbekannt' }}</td>
+    <td style="text-align:center;">{{ purchase.quantity or 0 }}</td>
+    <td style="text-align:right;">€{{ "%.2f"|format(purchase.price | default(0)) }}</td>
+    <td style="text-align:right;">€{{ "%.2f"|format(purchase.total_price | default(0)) }}</td>
+  </tr>
+  {% else %}
+  <tr>
+    <td colspan="5" style="text-align:center; font-style: italic; color: #555;">Keine Einkaufsdaten vorhanden.</td>
+  </tr>
+  {% endfor %}
+</tbody>
+
+
   </table>
 </section>
 <style>

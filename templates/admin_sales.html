@@ -5,134 +5,131 @@
 {% block content %}
 <h2>Gesamter Verkaufsverlauf</h2>
 
-<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Verkäufer oder Barcode..." onkeyup="filterTable()">
+<input type="text" id="searchInput" class="form-control mb-3" placeholder="🔍 Suche nach Verkäufer oder Barcode..." onkeyup="filterOrders()">
 
-<table class="table table-bordered align-middle">
-  <thead class="table-light">
-    <tr>
-      <th>Verkäufer</th>
-      <th>Produktname</th>
-      <th>Artikel Barcode</th>
-      <th>Menge</th>
-      <th>Verkaufspreis (€)</th>
-      <th>Datum</th>
-      <th>Aktionen</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for sale in sales %}
-    <tr>
-      <td>{{ sale.seller }}</td>
-      <td>{{ sale.item_name }}</td>
-      <td>{{ sale.barcode }}</td>
-      <td>{{ sale.quantity }}</td>
-      <td>{{ "%.2f"|format(sale.sale_price) }}</td>
-      <td>{{ sale.date.replace("T", " ")[:19] }}</td>
-      <td class="d-flex gap-1 flex-wrap">
+<div id="sales-container">
+  {% for order in sales %}
+    <div class="card mb-4 p-3 shadow-sm">
+      <h5><strong>Verkäufer:</strong> {{ order.user }}</h5>
+      <p><strong>Datum:</strong> {{ order.date.replace("T", " ")[:19] }}</p>
 
-        <!-- Quittung Button -->
-        <button onclick='showReceiptInPopup({{ sale | tojson | safe }})' class="btn btn-sm btn-info" title="Quittung anzeigen">
-          <i class="bi bi-receipt"></i>
-        </button>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Produkt</th>
+              <th>Barcode</th>
+              <th>Menge</th>
+              <th>Stückpreis (€)</th>
+              <th>Gesamt (€)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in order.get("items", []) %}
+            <tr>
+              <td>{{ item.product_name }}</td>
+              <td>{{ item.barcode }}</td>
+              <td>{{ item.quantity }}</td>
+              <td>{{ "%.2f"|format(item.sale_price) }} €</td>
+              <td>{{ "%.2f"|format(item.total_price) }} €</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
 
-        <a href="{{ url_for('edit_sale', order_id=sale.order_id, barcode=sale.barcode) }}" class="btn btn-sm btn-warning" title="Bearbeiten">
-  <i class="bi bi-pencil-square"></i>
-</a>
-
-<form method="post" action="{{ url_for('delete_sale', order_id=sale.order_id, barcode=sale.barcode) }}" onsubmit="return confirm('Verkauf wirklich löschen?')">
-  <button type="submit" class="btn btn-sm btn-danger" title="Löschen">
-    <i class="bi bi-trash"></i>
-  </button>
-</form>
-
-      </td>
-    </tr>
-    {% else %}
-    <tr><td colspan="7">Keine Verkäufe gefunden.</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<!-- html2pdf for receipt -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+      <div class="d-flex justify-content-between align-items-center">
+        <h5>Gesamtsumme: <span style="color: green;">€{{ "%.2f"|format(order.total_order_price) }}</span></h5>
+        <div>
+          <button onclick='showReceiptInPopup({{ order | tojson | safe }})' class="btn btn-sm btn-primary">
+            <i class="bi bi-receipt"></i> Quittung
+          </button>
+          <form method="POST" action="{{ url_for('delete_sales_order', order_id=order.order_id) }}"
+                style="display:inline;"
+                onsubmit="return confirm('Bist du sicher, dass du diese Bestellung löschen möchtest?');">
+            <button type="submit" class="btn btn-sm btn-danger">
+              <i class="bi bi-trash"></i> Löschen
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-center">❌ Keine Verkäufe gefunden.</p>
+  {% endfor %}
 
 <script>
-  const logoUrl = "{{ url_for('static', filename='images/logo.png') }}";
+function filterOrders() {
+  const input = document.getElementById("searchInput").value.toLowerCase();
+  const orders = document.querySelectorAll("#sales-container .card");
 
-  function showReceiptInPopup(sale) {
-    const win = window.open('', '_blank', 'width=800,height=900');
+  orders.forEach(order => {
+    const text = order.textContent.toLowerCase();
+    order.style.display = text.includes(input) ? "" : "none";
+  });
+}
 
-    const html = `
-      <html>
-      <head>
-        <title>Verkaufsquittung</title>
-        <style>
-          body { font-family: Arial; padding: 20px; }
-          h3, h4 { margin: 0; }
-          .header { display: flex; align-items: center; margin-bottom: 20px; }
-          .header img { height: 60px; margin-right: 15px; }
-          table { width: 100%; font-size: 0.95em; border-collapse: collapse; margin-top: 10px; }
-          td { padding: 5px 0; }
-          hr { margin: 20px 0; }
-          .footer { font-size: 0.8em; text-align: right; }
-          button { margin-top: 10px; padding: 6px 10px; }
-        </style>
-      </head>
-      <body onload="window.print()">
-        <div class="header">
-          <img src="${logoUrl}" alt="Logo">
-          <div>
-            <h3>Meine Firma</h3>
-            <p style="font-size: 0.9em;">Musterstraße 1, 12345 Musterstadt</p>
-            <p style="font-size: 0.9em;">Tel: 01234 567890 | info@meinefirma.de</p>
-          </div>
+function showReceiptInPopup(order) {
+  let itemsHTML = "";
+  order.items.forEach(item => {
+    itemsHTML += `
+      <tr>
+        <td>${item.product_name}</td>
+        <td>${item.barcode}</td>
+        <td>${item.quantity}</td>
+        <td>${item.sale_price.toFixed(2)} €</td>
+        <td>${item.total_price.toFixed(2)} €</td>
+      </tr>`;
+  });
+
+  const receiptHTML = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Verkaufsquittung</title>
+      <style>
+        body { font-family: Arial; padding: 20px; }
+        .header { display: flex; align-items: center; }
+        .header img { height: 60px; margin-right: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        td, th { border: 1px solid #ccc; padding: 8px; }
+        h3, h4 { margin-bottom: 10px; }
+      </style>
+    </head>
+    <body onload="window.print()">
+      <div class="header">
+        <img src="${location.origin}/static/images/logo.png" alt="Logo">
+        <div>
+          <h3>Meine Firma</h3>
+          <p>Musterstraße 1, 12345 Musterstadt</p>
         </div>
-        <hr>
-        <h4>Verkaufsquittung</h4>
-        <table>
-          <tr><td><strong>Datum:</strong></td><td>${sale.date.replace("T", " ").slice(0, 19)}</td></tr>
-          <tr><td><strong>Artikel:</strong></td><td>${sale.item_name || '—'}</td></tr>
-          <tr><td><strong>Barcode:</strong></td><td>${sale.barcode}</td></tr>
-          <tr><td><strong>Menge:</strong></td><td>${sale.quantity}</td></tr>
-          <tr><td><strong>Einzelpreis:</strong></td><td>${parseFloat(sale.sale_price).toFixed(2)} €</td></tr>
-          <tr><td><strong>Gesamtpreis:</strong></td><td>${(sale.sale_price * sale.quantity).toFixed(2)} €</td></tr>
-          <tr><td><strong>Verkäufer:</strong></td><td>${sale.seller}</td></tr>
-        </table>
-        <hr>
-        <p class="footer">Vielen Dank für Ihren Einkauf!</p>
-        <button onclick="downloadReceipt()">PDF herunterladen</button>
+      </div>
+      <hr>
+      <h4>Verkäufer: ${order.user}</h4>
+      <p><strong>Datum:</strong> ${order.date.replace("T", " ").slice(0, 19)}</p>
 
-        <script>
-          function downloadReceipt() {
-            const element = document.body;
-            html2pdf().from(element).set({
-              margin: 1,
-              filename: 'verkaufsquittung.pdf',
-              image: { type: 'jpeg', quality: 0.98 },
-              html2canvas: { scale: 2 },
-              jsPDF: { unit: 'cm', format: 'a4', orientation: 'portrait' }
-            }).save();
-          }
-        <\/script>
-      </body>
-      </html>
-    `;
+      <table>
+        <thead>
+          <tr>
+            <th>Produkt</th>
+            <th>Barcode</th>
+            <th>Menge</th>
+            <th>Stückpreis (€)</th>
+            <th>Gesamt (€)</th>
+          </tr>
+        </thead>
+        <tbody>${itemsHTML}</tbody>
+      </table>
 
-    win.document.write(html);
-    win.document.close();
-    win.focus();
-  }
+      <h4 style="text-align: right;">Gesamtsumme: <span style="color: green;">€${order.total_order_price.toFixed(2)}</span></h4>
+      <p style="text-align:right;">Vielen Dank für Ihren Einkauf!</p>
+    </body>
+    </html>
+  `;
 
-  function filterTable() {
-    const input = document.getElementById("searchInput");
-    const filter = input.value.toLowerCase();
-    const rows = document.querySelectorAll("table tbody tr");
-
-    rows.forEach(row => {
-      const seller = row.cells[0].textContent.toLowerCase();
-      const barcode = row.cells[2].textContent.toLowerCase();
-      row.style.display = seller.includes(filter) || barcode.includes(filter) ? "" : "none";
-    });
-  }
+  const popup = window.open('', '_blank', 'width=800,height=600');
+  popup.document.write(receiptHTML);
+  popup.document.close();
+}
 </script>
 {% endblock %}

@@ -85,12 +85,14 @@ def login_required(roles=None):
 # ROUTES
 @app.route('/')
 def index():
-    if 'username' in session:
-        if session['role'] == 'admin':
-            return redirect(url_for('admin_dashboard'))
-        else:
-            return redirect(url_for('seller_dashboard'))
-    return redirect(url_for('login'))
+    role = session.get('role')
+    if role == 'admin':
+        # redirect to seller_dashboard temporarily or show message
+        return redirect(url_for('admin_dashboard'))
+    elif role == 'seller':
+        return redirect(url_for('seller_dashboard'))
+    else:
+        return redirect(url_for('login'))
 
 # Login
 @app.route('/login', methods=['GET','POST'])
@@ -123,6 +125,7 @@ def load_sales():
     with open(SALES_FILE, 'r') as f:
         return json.load(f)
     
+
 # load_purchases 
 def load_purchases():
     with open(ORDERS_FILE, 'r') as f:
@@ -151,6 +154,10 @@ def calculate_all_time_profit(sales, items):
         profit += (sale_price - purchase_price) * quantity
     return round(profit, 2)
 
+
+
+
+
 # Notifications
 @app.route('/admin/notifications')
 @login_required('admin')
@@ -161,6 +168,8 @@ def admin_notifications():
     
     return render_template("admin_notifications.html", mailbox_notifications=mailbox_notifications)
 
+
+# Admin Daschboard
 # Admin Dashboard
 @app.route('/admin')
 @login_required('admin')
@@ -281,6 +290,79 @@ def admin_dashboard():
         mailbox_notifications=mailbox_notifications
     )
 
+# Seller_dashboard
+@app.route('/seller')
+@login_required('seller')
+def seller_dashboard():
+    username = session['username']
+
+    sales_data = load_sales()
+    orders = load_orders()
+
+    user_orders = [order for order in sales_data if order.get('user') == username]
+    user_purchases = [p for p in orders if p.get('user') == username]
+    
+    today = datetime.now().date()
+
+    daily_sales_total = 0.0
+    daily_purchases_total = 0.0  # <-- Initialize here
+    daily_profit = 0
+    monthly_profit = 0
+    total_profit = 0
+    monthly_total_order_price = 0
+
+    # Calculate daily sales total and profits
+    for order in user_orders:
+        order_date = datetime.fromisoformat(order['date']) if order.get('date') else None
+
+        if order_date:
+            # Total daily sales (Umsatz)
+            if order_date.date() == today:
+                for item in order.get('items', []):
+                    daily_sales_total += item.get('total_price', 0)
+
+        order_profit = 0
+        for item in order.get('items', []):
+            item_profit = (item.get('sale_price', 0) - item.get('purchase_price', 0)) * item.get('quantity', 0)
+            order_profit += item_profit
+
+        if order_date:
+            # Sum monthly profit
+            if order_date.year == today.year and order_date.month == today.month:
+                monthly_profit += order_profit
+                monthly_total_order_price += order.get('total_order_price', 0)
+
+            # Sum daily profit
+            if order_date.date() == today:
+                daily_profit += order_profit
+
+        total_profit += order_profit
+
+    # Calculate daily purchases total outside the order loop
+    for purchase in user_purchases:
+        purchase_date = datetime.fromisoformat(purchase.get('date')) if purchase.get('date') else None
+        if purchase_date and purchase_date.date() == today:
+            daily_purchases_total += purchase.get('price', 0) * purchase.get('quantity', 0)
+
+    total_purchase_cost = sum(p.get('price', 0) * p.get('quantity', 0) for p in user_purchases)
+    total_balance = daily_sales_total - daily_purchases_total
+    print("user_purchases",orders)
+    
+    return render_template(
+    'seller_dashboard.html',
+    sales=user_orders,
+    purchases=user_purchases,  # ✅ only seller's purchases!
+    daily_profit=daily_profit,
+    monthly_profit=monthly_profit,
+    total_profit=total_profit,
+    total_purchase_cost=total_purchase_cost,
+    total_balance=total_balance,
+    monthly_total_order_price=monthly_total_order_price,
+    daily_sales_total=daily_sales_total,
+    daily_purchases_total=daily_purchases_total
+)
+
+
 # Load_kasse_balance
 def load_kasse_balance():
     kasse_file = os.path.join('data', 'kasse.json')
@@ -296,31 +378,6 @@ def load_kasse_balance():
 # Format_currency_de
 def format_currency_de(amount):
     return f"€{amount:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".")
-
-# Set_wallet_balance
-@app.route('/set_wallet_balance', methods=['POST'])
-@login_required('admin')
-def set_wallet_balance():
-    wallet_balance = request.form.get('wallet_balance', type=float)
-    if wallet_balance is not None and wallet_balance >= 0:
-        session['wallet_balance'] = wallet_balance
-        log_wallet_change(wallet_balance, change_type="manual")
-        flash('Wallet-Bestand wurde aktualisiert.', 'success')
-    else:
-        flash('Ungültiger Betrag.', 'error')
-    return redirect(url_for('admin_dashboard'))
-
-def get_latest_wallet_balance():
-    wallet_file = os.path.join('data', 'wallet.json')
-    if os.path.exists(wallet_file):
-        with open(wallet_file, 'r', encoding='utf-8') as f:
-            try:
-                log = json.load(f)
-                if log:
-                    return log[-1]['amount']  # last saved balance
-            except json.JSONDecodeError:
-                pass
-    return 0.0  # fallback
 
 #Saving Everyday History
 def save_dashboard_snapshot(date, daily_profit, monthly_profit, wallet_balance, all_time_profit):
@@ -383,8 +440,6 @@ def log_wallet_change(amount, change_type="manual"):
 
 
  # Generate CSV
-
-
 #Log generate_csv
 def generate_csv(data, fieldnames):
     """Generate CSV response from list of dicts."""
@@ -393,15 +448,6 @@ def generate_csv(data, fieldnames):
         for row in data:
             yield ",".join(str(row.get(f, "")) for f in fieldnames) + "\n"
     return Response(generate(), mimetype='text/csv')
-
-@app.route('/reset_wallet_balance', methods=['POST'])
-def reset_wallet_balance():
-    # Set wallet balance to zero in session or wherever you store it
-    session['wallet_balance'] = 0.0
-
-    flash("Wallet-Bestand wurde auf 0 zurückgesetzt.", "success")
-    return redirect(url_for('admin_dashboard'))
-
 
 # Download CSV routes
 @app.route('/download/sales.csv')
@@ -418,76 +464,6 @@ def download_purchases_csv():
     fieldnames = ['date', 'product_name', 'quantity', 'price', 'total_price']
     return generate_csv(purchases, fieldnames)
 
-# Seller_dashboard
-@app.route('/seller')
-@login_required('seller')
-def seller_dashboard():
-    username = session['username']
-
-    sales_data = load_sales()
-    purchases_data = load_purchases()
-
-    user_orders = [order for order in sales_data if order.get('user') == username]
-    user_purchases = [p for p in purchases_data if p.get('user') == username]
-
-    today = datetime.now().date()
-
-    daily_sales_total = 0.0
-    daily_purchases_total = 0.0  # <-- Initialize here
-    daily_profit = 0
-    monthly_profit = 0
-    total_profit = 0
-    monthly_total_order_price = 0
-
-    # Calculate daily sales total and profits
-    for order in user_orders:
-        order_date = datetime.fromisoformat(order['date']) if order.get('date') else None
-
-        if order_date:
-            # Total daily sales (Umsatz)
-            if order_date.date() == today:
-                for item in order.get('items', []):
-                    daily_sales_total += item.get('total_price', 0)
-
-        order_profit = 0
-        for item in order.get('items', []):
-            item_profit = (item.get('sale_price', 0) - item.get('purchase_price', 0)) * item.get('quantity', 0)
-            order_profit += item_profit
-
-        if order_date:
-            # Sum monthly profit
-            if order_date.year == today.year and order_date.month == today.month:
-                monthly_profit += order_profit
-                monthly_total_order_price += order.get('total_order_price', 0)
-
-            # Sum daily profit
-            if order_date.date() == today:
-                daily_profit += order_profit
-
-        total_profit += order_profit
-
-    # Calculate daily purchases total outside the order loop
-    for purchase in user_purchases:
-        purchase_date = datetime.fromisoformat(purchase.get('date')) if purchase.get('date') else None
-        if purchase_date and purchase_date.date() == today:
-            daily_purchases_total += purchase.get('price', 0) * purchase.get('quantity', 0)
-
-    total_purchase_cost = sum(p.get('price', 0) * p.get('quantity', 0) for p in user_purchases)
-    total_balance = total_profit - total_purchase_cost
-
-    return render_template(
-        'seller_dashboard.html',
-        sales=user_orders,
-        purchases=user_purchases,
-        daily_profit=daily_profit,
-        monthly_profit=monthly_profit,
-        total_profit=total_profit,
-        total_purchase_cost=total_purchase_cost,
-        total_balance=total_balance,
-        monthly_total_order_price=monthly_total_order_price,
-        daily_sales_total=daily_sales_total,
-        daily_purchases_total=daily_purchases_total,
-    )
 
 # Admin: List Sellers
 @app.route('/admin/sellers')
@@ -630,7 +606,10 @@ def barcode_print(barcode_value):
         as_attachment=False  # open inline
     )
 
+
+# Admin: admin_sales
 @app.route('/admin/sales')
+@login_required('admin')
 def admin_sales():
     all_orders = load_sales()
     flattened_sales = []
@@ -646,12 +625,14 @@ def admin_sales():
                 'seller': user,
                 'date': date,
                 'barcode': item.get('barcode'),
-                'item_name': item.get('product_name'),
+                'product_name': item.get('product_name'),  # keep same as HTML template
                 'quantity': item.get('quantity'),
-                'sale_price': item.get('sale_price'),
+                'sale_price': float(item.get('sale_price', 0)),
+                'total_price': float(item.get('total_price', item.get('quantity', 0) * item.get('sale_price', 0)))
             })
-    
-    return render_template('admin_sales.html', sales=flattened_sales[::-1])
+
+    all_orders = load_sales()  # Full orders with items list and total_order_price
+    return render_template('admin_sales.html', sales=all_orders[::-1])
 
 @app.route('/admin/sales/edit/<order_id>/<barcode>', methods=['GET', 'POST'])
 def edit_sale(order_id, barcode):
@@ -682,29 +663,20 @@ def edit_sale(order_id, barcode):
 
     return render_template('edit_sale.html', order_id=order_id, barcode=barcode, sale=item)
 
-@app.route('/admin/sales/delete/<order_id>/<barcode>', methods=['POST'])
-def delete_sale(order_id, barcode):
+@app.route('/admin/sales/delete_sales_order/<order_id>', methods=['POST'])
+@login_required('admin')
+def delete_sales_order(order_id):
     sales = load_sales()
-    order = next((o for o in sales if o['order_id'] == order_id), None)
-    if not order:
-        flash('Bestellung nicht gefunden', 'danger')
-        return redirect(url_for('admin_sales'))
+    updated_sales = [order for order in sales if order.get('order_id') != order_id]
+    
+    if len(updated_sales) == len(sales):
+        flash("❌ Bestellung nicht gefunden.", "danger")
+    else:
+        save_sales(updated_sales)
+        flash("✅ Bestellung erfolgreich gelöscht.", "warning")
 
-    items = order.get('items', [])
-    item = next((i for i in items if i['barcode'] == barcode), None)
-    if not item:
-        flash('Artikel nicht gefunden', 'danger')
-        return redirect(url_for('seller_sales'))
-
-    items.remove(item)
-
-    # Optional: Wenn nach Entfernen keine Items mehr in Order, dann auch Order entfernen
-    if len(items) == 0:
-        sales.remove(order)
-
-    save_sales(sales)
-    flash(f"Verkauf von {item['quantity']} × {item.get('product_name', 'Artikel')} gelöscht.", 'warning')
     return redirect(url_for('admin_sales'))
+
 
 # Add Item
 @app.route('/admin/add_item', methods=['GET', 'POST'])
@@ -1204,24 +1176,38 @@ def seller_items():
     items = items[::-1]
     return render_template('seller_items.html', items=items)
 
-# List all the Orders
 @app.route('/orders')
+@login_required(['admin', 'seller'])
 def list_orders():
-    orders = load_orders()
-    users = sorted(set(order['user'] for order in orders if 'user' in order))
+    role = session.get('role')
+    username = session.get('username')
+    all_orders = load_orders()
+    users = list({o.get('user') for o in all_orders if o.get('user')})
 
-    # Filter by user and date from query parameters
-    user_filter = request.args.get('user')
-    date_filter = request.args.get('date')  # expects 'YYYY-MM-DD'
+    # Optional: filters from form
+    filter_user = request.args.get('user', '')
+    filter_date = request.args.get('date', '')
 
-    filtered_orders = []
-    for order in orders:
-        match_user = (not user_filter) or (order.get('user') == user_filter)
-        match_date = (not date_filter) or order.get('date', '').startswith(date_filter)
-        if match_user and match_date:
-            filtered_orders.append(order)
+    # FILTER orders:
+    if role == 'seller':
+        # Show only orders created by the logged-in seller
+        orders = [o for o in all_orders if o.get('user') == username]
+    else:
+        # Admin can see all
+        orders = all_orders
 
-    return render_template('list_orders.html', orders=filtered_orders[::-1], users=users)
+    # Apply additional filter by user (only admins can filter this)
+    if filter_user:
+        orders = [o for o in orders if o.get('user') == filter_user]
+
+    if filter_date:
+        try:
+            orders = [o for o in orders if o.get('date', '').startswith(filter_date)]
+        except Exception:
+            pass
+
+    return render_template("list_orders.html", orders=orders, users=users)
+
 
 
 def load_orders():
@@ -1238,14 +1224,14 @@ def save_orders(orders):
 
 # Orders CRUD
 # Edit Route
-@app.route('/orders/edit/<int:index>', methods=['GET', 'POST'])
-def edit_order(index):
+@app.route('/orders/edit/<order_number>', methods=['GET', 'POST'])
+
+def edit_order(order_number):
     orders = load_orders()
-    if index < 0 or index >= len(orders):
+    order = next((o for o in orders if o['order_number'] == order_number), None)
+    if not order:
         flash("Bestellung nicht gefunden.", "danger")
         return redirect(url_for('list_orders'))
-    
-    order = orders[index]
 
     if request.method == 'POST':
         try:
@@ -1267,17 +1253,20 @@ def edit_order(index):
         except Exception as e:
             flash(f'Fehler beim Aktualisieren der Bestellung: {e}', 'danger')
 
-    return render_template('edit_order.html', order=order, index=index)
+    return render_template('edit_order.html', order=order)
 
 # Orders CRUD
 # Delete Route
-@app.route('/orders/delete/<int:index>', methods=['POST'])
-def delete_order(index):
+@app.route('/orders/delete/<order_number>', methods=['POST'])
+@login_required('admin')
+def delete_order(order_number):
     orders = load_orders()
-    if 0 <= index < len(orders):
-        removed_order = orders.pop(index)
+    # Find order with matching order_number
+    order_to_delete = next((o for o in orders if o['order_number'] == order_number), None)
+    if order_to_delete:
+        orders.remove(order_to_delete)
         save_orders(orders)
-        flash(f'Bestellung {removed_order.get("product_name", "")} wurde gelöscht.', 'success')
+        flash("Bestellung gelöscht.", "success")
     else:
         flash("Bestellung nicht gefunden.", "danger")
     return redirect(url_for('list_orders'))
@@ -1434,7 +1423,7 @@ def dismiss_alert():
     barcode = request.form.get('barcode')
     if not barcode:
         flash("⚠️ Ungültiger Barcode für Erinnerung.", "error")
-        return redirect(url_for('admin_dashboard'))
+        return redirect(url_for('seller_dashboard'))
 
     dismissed_alerts = load_json(ALERTS_DISMISS_FILE)
 
