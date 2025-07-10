@@ -8,7 +8,7 @@ from functools import wraps
 
 
 app = Flask(__name__)
-app.secret_key = 'secret'  # Set a strong secret key for production
+app.secret_key = ''  # Set a strong secret key for production
 
 
 DATA_PATH = './data'
