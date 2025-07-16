@@ -76,14 +76,12 @@
         </form>
 
         <!-- Print Barcode Button -->
-        <a 
-          href="{{ url_for('barcode_print', barcode_value=item.barcode) }}" 
-          class="btn btn-sm btn-outline-primary" 
-          target="_blank" 
-          title="Code drucken"
-        >
-          <i class="bi bi-upc"></i>
-        </a>
+        <button 
+          class="btn btn-outline-primary btn-sm me-1" 
+          title="Code drucken" 
+          onclick="printBarcode('{{ item.barcode }}', '{{ item.product_name }}')">
+          <i class="bi bi-upc-scan"></i>
+        </button>
 
       </td>
     </tr>
@@ -121,33 +119,76 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.style.display = 'inline-block';
   });
 });
-function printQRCode(index) {
-  const order = orders[index];
-  if (!order.barcode) {
-    alert("Kein Barcode für diese Bestellung verfügbar.");
-    return;
-  }
+function printBarcode(barcode, productName) {
+  const qrSrc = `${location.origin}/static/barcodes/code_barres_${barcode}.png`;
 
-  const qrSrc = `${location.origin}/static/${order.barcode}`;
+
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
-      <title>QR Code Drucken</title>
+      <title>Barcode Drucken</title>
       <style>
-        body { text-align: center; font-family: Arial, sans-serif; padding: 20px; }
-        img { max-width: 80%; height: auto; }
+        @media print {
+          body {
+            margin: 0;
+          }
+          .label {
+            width: 40mm;
+            height: 30mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          img {
+            max-width: 100%;
+            max-height: 80%;
+            object-fit: contain;
+          }
+          .label-text {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 2mm;
+          }
+        }
+
+        body {
+          margin: 0;
+        }
+        .label {
+          width: 40mm;
+          height: 30mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+        img {
+          max-width: 100%;
+          max-height: 80%;
+          object-fit: contain;
+        }
+        .label-text {
+          font-size: 10px;
+          text-align: center;
+          margin-top: 2mm;
+        }
       </style>
     </head>
     <body onload="window.print()">
-      <h3>QR Code zur Bestellung</h3>
-      <img src="${qrSrc}" alt="QR Code">
-      <p>Referenz: ${order.ref_number}</p>
+      <div class="label">
+        <img src="${qrSrc}" alt="Barcode">
+        <div class="label-text">
+          ${productName}
+        </div>
+      </div>
     </body>
     </html>
   `;
 
-  const win = window.open('', '_blank', 'width=400,height=500');
+  const win = window.open('', '_blank', 'width=400,height=300');
   if (win) {
     win.document.open();
     win.document.write(html);
