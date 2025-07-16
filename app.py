@@ -950,7 +950,6 @@ def pay_salary():
 
     return render_template('pay_salary.html', users=users)
 
-
 @app.route('/order', methods=['GET', 'POST'])
 def order():
     if session.get('role') not in ['admin', 'seller']:
@@ -985,7 +984,7 @@ def order():
                 except json.JSONDecodeError:
                     pass
 
-        # Function to generate a unique 12-digit barcode
+        # Generate a unique 12-digit barcode
         def generate_unique_barcode():
             while True:
                 code = ''.join(str(random.randint(0, 9)) for _ in range(12))
@@ -997,7 +996,7 @@ def order():
             if not ref_number.isdigit() or len(ref_number) not in [12, 13]:
                 flash("❌ Der manuell eingegebene Barcode muss genau 12 Ziffern lang sein.", "danger")
                 return redirect(url_for('order'))
-            
+
             if any(i.get('barcode') == ref_number for i in items):
                 flash("❌ Der Barcode existiert bereits. Bitte wählen Sie einen anderen.", "danger")
                 return redirect(url_for('order'))
@@ -1009,10 +1008,22 @@ def order():
         # Save barcode image
         barcode_dir = os.path.join(app.static_folder, 'barcodes')
         os.makedirs(barcode_dir, exist_ok=True)
-        barcode_path = os.path.join(barcode_dir, f'code_barres_{barcode_number}')
+
+        # Barcode filename WITHOUT extension, save() adds .png automatically
+        barcode_filename_no_ext = f'code_barres_{barcode_number}'
+        barcode_path = os.path.join(barcode_dir, barcode_filename_no_ext)
+
+        # Barcode options for better quality and readability
+        writer_options = {
+            'write_text': True,    # hide numbers below the barcode for clarity
+            'module_height': 15.0,     # height of bars ~30mm
+            'module_width': 0.4,       # thickness of bars
+            'quiet_zone': 2.0          # margin
+        }
+
         ean = barcode.get_barcode_class('ean13')
         code = ean(barcode_number, writer=ImageWriter())
-        code.save(barcode_path)
+        code.save(barcode_path, options=writer_options)  # saves as PNG with .png extension added
 
         total_price = round(price * quantity, 2)
 
@@ -1028,7 +1039,7 @@ def order():
             "total_price": total_price,
             "date": today,
             "user": username,
-            "barcode": f"barcodes/code_barres_{barcode_number}"
+            "barcode": f"barcodes/{barcode_filename_no_ext}.png"  # add extension here explicitly
         }
 
         # Save order
@@ -1044,7 +1055,7 @@ def order():
         with open(ORDERS_FILE, 'w', encoding='utf-8') as f:
             json.dump(orders, f, indent=2, ensure_ascii=False)
 
-        # Update or add item
+        # Update or add item in inventory
         found = False
         for item in items:
             if item.get('product_name') == product_name:
@@ -1066,7 +1077,7 @@ def order():
                 "quantity": quantity,
                 "description": description,
                 "seller": username,
-                "date": today  # human-readable date format
+                "date": today
             }
             items.append(new_item)
 

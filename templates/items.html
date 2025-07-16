@@ -121,7 +121,41 @@ document.addEventListener('DOMContentLoaded', () => {
     btn.style.display = 'inline-block';
   });
 });
+function printQRCode(index) {
+  const order = orders[index];
+  if (!order.barcode) {
+    alert("Kein Barcode für diese Bestellung verfügbar.");
+    return;
+  }
 
+  const qrSrc = `${location.origin}/static/${order.barcode}`;
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>QR Code Drucken</title>
+      <style>
+        body { text-align: center; font-family: Arial, sans-serif; padding: 20px; }
+        img { max-width: 80%; height: auto; }
+      </style>
+    </head>
+    <body onload="window.print()">
+      <h3>QR Code zur Bestellung</h3>
+      <img src="${qrSrc}" alt="QR Code">
+      <p>Referenz: ${order.ref_number}</p>
+    </body>
+    </html>
+  `;
+
+  const win = window.open('', '_blank', 'width=400,height=500');
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  } else {
+    alert("Pop-up blockiert – bitte zulassen.");
+  }
+}
 </script>
 
 {% endblock %}
