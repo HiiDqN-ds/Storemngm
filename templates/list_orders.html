@@ -174,21 +174,69 @@ function printQRCode(index) {
     <!DOCTYPE html>
     <html>
     <head>
-      <title>QR Code Drucken</title>
+      <title>Barcode Drucken</title>
       <style>
-        body { text-align: center; font-family: Arial, sans-serif; padding: 20px; }
-        img { max-width: 80%; height: auto; }
+        @media print {
+          body {
+            margin: 0;
+          }
+          .label {
+            width: 40mm;
+            height: 30mm;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            page-break-after: always;
+          }
+          img {
+            max-width: 100%;
+            max-height: 80%;
+            object-fit: contain;
+          }
+          .label-text {
+            font-size: 10px;
+            text-align: center;
+            margin-top: 2mm;
+          }
+        }
+
+        body {
+          margin: 0;
+        }
+        .label {
+          width: 40mm;
+          height: 30mm;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+        img {
+          max-width: 100%;
+          max-height: 80%;
+          object-fit: contain;
+        }
+        .label-text {
+          font-size: 10px;
+          text-align: center;
+          margin-top: 2mm;
+        }
       </style>
     </head>
     <body onload="window.print()">
-      <h3>QR Code zur Bestellung</h3>
-      <img src="${qrSrc}" alt="QR Code">
-      <p>Referenz: ${order.ref_number}</p>
+      <div class="label">
+        <img src="${qrSrc}" alt="Barcode">
+        <div class="label-text">
+          ${order.product_name || ''}<br>
+          ${order.ref_number || order.order_number}
+        </div>
+      </div>
     </body>
     </html>
   `;
 
-  const win = window.open('', '_blank', 'width=400,height=500');
+  const win = window.open('', '_blank', 'width=400,height=400');
   if (win) {
     win.document.open();
     win.document.write(html);
