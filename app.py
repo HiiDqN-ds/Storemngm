@@ -5,10 +5,12 @@ from datetime import datetime, timedelta
 from barcode.writer import ImageWriter
 from flask import jsonify,send_file
 from functools import wraps
-
+from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.secret_key = 'secret'  # Set a strong secret key for production
+
+# Set the database connection URL here
 
 
 DATA_PATH = './data'

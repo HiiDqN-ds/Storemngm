@@ -1,2 +1,18 @@
 [
+    {
+        "order_id": "8604f0e8-1d76-4d06-9a77-651a20d770cf",
+        "user": "admin",
+        "date": "2025-07-19T19:38:14.228423",
+        "items": [
+            {
+                "barcode": "780558232639",
+                "product_name": "sdfsdf",
+                "quantity": 1,
+                "sale_price": 5252.0,
+                "total_price": 5252.0,
+                "purchase_price": 5252.0
+            }
+        ],
+        "total_order_price": 5252.0
+    }
 ]

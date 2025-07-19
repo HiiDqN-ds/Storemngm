@@ -1,13 +1,16 @@
 [
-  {
-    "product_name": "sdfsdf",
-    "barcode": "780558232639",
-    "purchase_price": 5252.0,
-    "selling_price": 5252.0,
-    "min_selling_price": 5252.0,
-    "quantity": 1,
-    "description": "",
-    "seller": "admin",
-    "date": "2025-07-16"
-  }
+    {
+        "product_name": "sdfsdf",
+        "barcode": "780558232639",
+        "purchase_price": 5252.0,
+        "selling_price": 5252.0,
+        "min_selling_price": 5252.0,
+        "quantity": 0,
+        "description": "",
+        "seller": "admin",
+        "date": "2025-07-16",
+        "name": "sdfsdf",
+        "price": 5252.0,
+        "photo_link": ""
+    }
 ]
